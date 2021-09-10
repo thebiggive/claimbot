@@ -1,0 +1,6 @@
+.env
+vendor/
+
+var/cache/**
+
+.idea/

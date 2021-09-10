@@ -1,0 +1,40 @@
+{
+    "name": "thebiggive/claimbot",
+    "description": "Gift Aid claim runner",
+    "type": "project",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "php": "^8.0",
+        "php-di/php-di": "^6.3",
+        "symfony/amazon-sqs-messenger": "^5.3",
+        "symfony/console": "^5.3",
+        "symfony/messenger": "^5.3",
+        "thebiggive/hmrc-gift-aid": "^1.0.0-beta3"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-latest"
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true
+    },
+    "autoload": {
+        "psr-4": {
+            "ClaimBot\\": "src/"
+        }
+    },
+    "scripts": {
+        "claimbot:claim": [
+            "Composer\\Config::disableProcessTimeout",
+            "php claimbot-cli.php claimbot:claim"
+        ]
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Noel Light-Hilary",
+            "email": "noel@thebiggive.org.uk"
+        }
+    ]
+}

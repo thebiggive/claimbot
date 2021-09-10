@@ -1,0 +1,18 @@
+version: "3.7"
+
+volumes:
+  logs:
+    driver: local
+
+services:
+  app:
+    image: thebiggive/php:8.0
+    volumes:
+      - .:/var/www/html
+    env_file:
+      - .env
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:5.0
