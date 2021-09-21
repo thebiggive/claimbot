@@ -8,6 +8,9 @@ $psr11App = require __DIR__ . '/bootstrap.php';
 
 use ClaimBot\Commands\ClaimCommand;
 use DI\Container;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+use Monolog\Processor\UidProcessor;
 use Psr\Log\LoggerInterface; // TODO give commands a logger via DI, without Slim `app/` structure?
 use Symfony\Component\Console\Application;
 use Symfony\Component\Messenger\RoutableMessageBus; // TODO pass thru when consuming real msgs
@@ -19,8 +22,22 @@ $cliApp = new Application();
 //$messengerReceiverLocator = new Container();
 //$messengerReceiverLocator->set($messengerReceiverKey, $psr11App->get(TransportInterface::class));
 
+// TODO probably move deps out to dependencies.php and/or make LoggerInterface a service of the $psr11App.
+$loggerSettings = [
+    'name' => 'claimbot',
+    'path' => 'php://stdout',
+    'level' => Logger::DEBUG,
+];
+$logger = new Logger($loggerSettings['name']);
+
+$processor = new UidProcessor();
+$logger->pushProcessor($processor);
+
+$handler = new StreamHandler($loggerSettings['path'], $loggerSettings['level']);
+$logger->pushHandler($handler);
+
 $commands = [
-    new ClaimCommand(),
+    new ClaimCommand($logger),
 ];
 
 foreach ($commands as $command) {
