@@ -51,15 +51,19 @@ class ClaimCommand extends Command
             getenv('MAIN_GATEWAY_SENDER_PASSWORD'), // The charity's own Govt Gateway user ID + password? OR switch to multi-claim
             'https://github.com/thebiggive/claimbot',
             'The Big Give ClaimBot',
-            'v1.0',
-            true, // TODO dynamically select test mode
+            getenv('APP_VERSION'),
+            getenv('APP_ENV') !== 'production',
             null,
             'http://host.docker.internal:5665/LTS/LTSPostServlet'
         );
         $ga->setLogger($this->logger);
-        $ga->setVendorId('0111'); // TODO get from env var & use a real ID.
+        $ga->setVendorId(getenv('VENDOR_ID'));
 
-        $ga->setCompress(false); // TODO switch this based on env local / debug flag?
+        $ga->setAgentDetails('Agent Company', ['Line 1', 'Line 2']);
+        $ga->setTimestamp(new \DateTime());
+
+        $skipCompression = (bool) (getenv('SKIP_PAYLOAD_COMPRESSION') ?? false);
+        $ga->setCompress(!$skipCompression);
 
         $ga->setClaimToDate($sampleDonation->donation_date); // date of most recent donation
 

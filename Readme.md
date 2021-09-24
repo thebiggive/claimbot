@@ -16,7 +16,7 @@ Because HMRC require Java [1.]7 specifically, you must:
 * ensure your normal env vars have `$LTS_HOME` set to the full path of the above, e.g. in your profile script `~/.zshrc` on modern macOS versions.
 * set `$JAVA_HOME` to the version [1.]7 Java at runtime as you start the service: `JAVA_HOME=$(/usr/libexec/java_home -v 1.7) ./RunLTSStandalone.sh`
 
-### First run
+### Pre-First Run
 
 Before the above commands works you must run the Update Manager once.
 

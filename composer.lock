@@ -2469,16 +2469,16 @@
         },
         {
             "name": "thebiggive/php-govtalk",
-            "version": "v1.0.0-beta2",
+            "version": "v1.0.0-beta3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thebiggive/php-govtalk.git",
-                "reference": "72423d967979fccdc22c1b5b31af790e5e731b4d"
+                "reference": "c4c324f5bf02f172b7658b7d7f7349b9bfdfdc5b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thebiggive/php-govtalk/zipball/72423d967979fccdc22c1b5b31af790e5e731b4d",
-                "reference": "72423d967979fccdc22c1b5b31af790e5e731b4d",
+                "url": "https://api.github.com/repos/thebiggive/php-govtalk/zipball/c4c324f5bf02f172b7658b7d7f7349b9bfdfdc5b",
+                "reference": "c4c324f5bf02f172b7658b7d7f7349b9bfdfdc5b",
                 "shasum": ""
             },
             "require": {
@@ -2523,9 +2523,9 @@
             "description": "A library for applications which interface with the UK Government Gateway",
             "homepage": "https://github.com/thebiggive/php-govtalk",
             "support": {
-                "source": "https://github.com/thebiggive/php-govtalk/tree/v1.0.0-beta2"
+                "source": "https://github.com/thebiggive/php-govtalk/tree/v1.0.0-beta3"
             },
-            "time": "2021-09-21T10:26:47+00:00"
+            "time": "2021-09-24T15:03:58+00:00"
         }
     ],
     "packages-dev": [
