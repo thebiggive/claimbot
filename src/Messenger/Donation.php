@@ -23,4 +23,5 @@ class Donation
     public bool $overseas = false;
     public float $amount;
     public bool $sponsored = false;
+    public ?string $org_hmrc_ref = null;
 }

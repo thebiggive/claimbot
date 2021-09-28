@@ -41,6 +41,7 @@ class ClaimCommand extends Command
         $sampleDonation->house_no = '1a';
         $sampleDonation->postcode = 'N1 1AA';
         $sampleDonation->amount = 123.45;
+        $sampleDonation->org_hmrc_ref = 'AB12345';
 
         /**
          * Password must be a govt gateway one in plain text. MD5 was supported before but retired.
@@ -54,13 +55,25 @@ class ClaimCommand extends Command
             getenv('APP_VERSION'),
             getenv('APP_ENV') !== 'production',
             null,
-            'http://host.docker.internal:5665/LTS/LTSPostServlet'
+//            'http://host.docker.internal:5665/LTS/LTSPostServlet' // Uncomment to use LTS rather than ETS.
         );
         $ga->setLogger($this->logger);
         $ga->setVendorId(getenv('VENDOR_ID'));
 
-        $ga->setAgentDetails('Agent Company', ['Line 1', 'Line 2']);
-        $ga->setTimestamp(new \DateTime());
+        // Not auth'd with ETS (for now).
+//        $ga->setAgentDetails(
+//            '11111222223333',
+//            'Agent Company',
+//            [
+//                'line' => ['Line 1', 'Line 2'],
+//                'country' => 'United Kingdom',
+//            ],
+//            null,
+//            'myAgentRef',
+//        );
+
+        // ETS returns an error if you set a GatewayTimestamp – can only use this for LTS.
+//        $ga->setTimestamp(new \DateTime());
 
         $skipCompression = (bool) (getenv('SKIP_PAYLOAD_COMPRESSION') ?? false);
         $ga->setCompress(!$skipCompression);
@@ -83,7 +96,7 @@ class ClaimCommand extends Command
         );
 
         $ga->setAuthorisedOfficial($officer);
-        $ga->setClaimingOrganisation($claimant);
+        $ga->addClaimingOrganisation($claimant);
 
         $response = $ga->giftAidSubmit([(array)$sampleDonation]);
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c070d0e556893e974ac3fc53f53e3027",
+    "content-hash": "268cb17aeb6a97c4ec4103658276c98c",
     "packages": [
         {
             "name": "async-aws/core",
@@ -1364,16 +1364,16 @@
         },
         {
             "name": "symfony/doctrine-messenger",
-            "version": "v5.3.7",
+            "version": "v5.3.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/doctrine-messenger.git",
-                "reference": "3d7d247feeaec4be4bbd22a1d06ae9343701336b"
+                "reference": "e11b87557afae8631f83c5afaa1de84232a8043e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/doctrine-messenger/zipball/3d7d247feeaec4be4bbd22a1d06ae9343701336b",
-                "reference": "3d7d247feeaec4be4bbd22a1d06ae9343701336b",
+                "url": "https://api.github.com/repos/symfony/doctrine-messenger/zipball/e11b87557afae8631f83c5afaa1de84232a8043e",
+                "reference": "e11b87557afae8631f83c5afaa1de84232a8043e",
                 "shasum": ""
             },
             "require": {
@@ -1417,7 +1417,7 @@
             "description": "Symfony Doctrine Messenger Bridge",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/doctrine-messenger/tree/v5.3.7"
+                "source": "https://github.com/symfony/doctrine-messenger/tree/v5.3.8"
             },
             "funding": [
                 {
@@ -1433,20 +1433,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-08-26T13:49:04+00:00"
+            "time": "2021-09-01T13:32:48+00:00"
         },
         {
             "name": "symfony/http-client",
-            "version": "v5.3.7",
+            "version": "v5.3.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "da8638ffecefc4e8ba2bc848d7b61a408119b333"
+                "reference": "c6370fe2c0a445aedc08f592a6a3149da1fea4c7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/da8638ffecefc4e8ba2bc848d7b61a408119b333",
-                "reference": "da8638ffecefc4e8ba2bc848d7b61a408119b333",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/c6370fe2c0a445aedc08f592a6a3149da1fea4c7",
+                "reference": "c6370fe2c0a445aedc08f592a6a3149da1fea4c7",
                 "shasum": ""
             },
             "require": {
@@ -1504,7 +1504,7 @@
             "description": "Provides powerful methods to fetch HTTP resources synchronously or asynchronously",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v5.3.7"
+                "source": "https://github.com/symfony/http-client/tree/v5.3.8"
             },
             "funding": [
                 {
@@ -1520,7 +1520,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-08-28T16:24:37+00:00"
+            "time": "2021-09-07T10:45:28+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
@@ -1602,16 +1602,16 @@
         },
         {
             "name": "symfony/messenger",
-            "version": "v5.3.7",
+            "version": "v5.3.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/messenger.git",
-                "reference": "8000632a98da6a54c58d6675342d56083655d5b4"
+                "reference": "1cc72a00521c69219ba79b7b04757d5e7fface66"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/messenger/zipball/8000632a98da6a54c58d6675342d56083655d5b4",
-                "reference": "8000632a98da6a54c58d6675342d56083655d5b4",
+                "url": "https://api.github.com/repos/symfony/messenger/zipball/1cc72a00521c69219ba79b7b04757d5e7fface66",
+                "reference": "1cc72a00521c69219ba79b7b04757d5e7fface66",
                 "shasum": ""
             },
             "require": {
@@ -1672,7 +1672,7 @@
             "description": "Helps applications send and receive messages to/from other applications or via message queues",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/messenger/tree/v5.3.7"
+                "source": "https://github.com/symfony/messenger/tree/v5.3.9"
             },
             "funding": [
                 {
@@ -2178,16 +2178,16 @@
         },
         {
             "name": "symfony/redis-messenger",
-            "version": "v5.3.7",
+            "version": "v5.3.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/redis-messenger.git",
-                "reference": "ec74daf942ef7ba64f054b462964b931e01e6d3f"
+                "reference": "4d775c1728fc3124a58376dc746e643d8ae80849"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/redis-messenger/zipball/ec74daf942ef7ba64f054b462964b931e01e6d3f",
-                "reference": "ec74daf942ef7ba64f054b462964b931e01e6d3f",
+                "url": "https://api.github.com/repos/symfony/redis-messenger/zipball/4d775c1728fc3124a58376dc746e643d8ae80849",
+                "reference": "4d775c1728fc3124a58376dc746e643d8ae80849",
                 "shasum": ""
             },
             "require": {
@@ -2225,7 +2225,7 @@
             "description": "Symfony Redis extension Messenger Bridge",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/redis-messenger/tree/v5.3.7"
+                "source": "https://github.com/symfony/redis-messenger/tree/v5.3.8"
             },
             "funding": [
                 {
@@ -2241,7 +2241,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-08-02T21:14:49+00:00"
+            "time": "2021-09-25T08:57:14+00:00"
         },
         {
             "name": "symfony/service-contracts",
@@ -2407,23 +2407,25 @@
         },
         {
             "name": "thebiggive/hmrc-gift-aid",
-            "version": "v1.0.0-beta3",
+            "version": "v1.0.0-beta5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thebiggive/hmrc-gift-aid.git",
-                "reference": "b2061d5ab773aecd1e1a331167883525eb9fcab7"
+                "reference": "e1aab593ce91b059618290ef63574d0e2aaf2a81"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/b2061d5ab773aecd1e1a331167883525eb9fcab7",
-                "reference": "b2061d5ab773aecd1e1a331167883525eb9fcab7",
+                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/e1aab593ce91b059618290ef63574d0e2aaf2a81",
+                "reference": "e1aab593ce91b059618290ef63574d0e2aaf2a81",
                 "shasum": ""
             },
             "require": {
                 "ext-dom": "*",
+                "ext-simplexml": "*",
                 "ext-xmlwriter": "*",
+                "ext-zlib": "*",
                 "php": "^7.4 || ^8.0",
-                "thebiggive/php-govtalk": "^1.0.0-beta1"
+                "thebiggive/php-govtalk": "^1.0.0-beta3"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.5.7",
@@ -2463,9 +2465,9 @@
             "description": "A library for charities and CASCs to claim Gift Aid (including Small Donations) from HMRC",
             "homepage": "https://github.com/thebiggive/hmrc-gift-aid",
             "support": {
-                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v1.0.0-beta3"
+                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v1.0.0-beta5"
             },
-            "time": "2021-09-10T14:48:31+00:00"
+            "time": "2021-09-28T12:49:42+00:00"
         },
         {
             "name": "thebiggive/php-govtalk",
