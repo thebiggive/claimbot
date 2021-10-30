@@ -12,6 +12,8 @@ namespace ClaimBot\Messenger;
  */
 class Donation
 {
+    public string $id;
+
     /** @var string Donation date, YYYY-MM-DD. */
     public string $donation_date;
 
