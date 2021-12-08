@@ -50,7 +50,7 @@ class ClaimCommand extends Command
         $ga = new GiftAid(
             getenv('MAIN_GATEWAY_SENDER_ID'),
             getenv('MAIN_GATEWAY_SENDER_PASSWORD'), // The charity's own Govt Gateway user ID + password? OR switch to multi-claim
-            'https://github.com/thebiggive/claimbot',
+            getenv('VENDOR_ID'),
             'The Big Give ClaimBot',
             getenv('APP_VERSION'),
             getenv('APP_ENV') !== 'production',
