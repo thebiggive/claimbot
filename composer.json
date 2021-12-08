@@ -5,16 +5,19 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": "^8.0",
+        "php": "^8.0.2",
         "monolog/monolog": "^2.3",
         "php-di/php-di": "^6.3",
-        "symfony/amazon-sqs-messenger": "^5.3",
-        "symfony/console": "^5.3",
-        "symfony/messenger": "^5.3",
+        "symfony/amazon-sqs-messenger": "^6.0",
+        "symfony/console": "^6.0",
+        "symfony/lock": "^6.0",
+        "symfony/messenger": "^6.0",
         "thebiggive/hmrc-gift-aid": "^1.0.0-beta7"
     },
     "require-dev": {
-        "roave/security-advisories": "dev-latest"
+        "ext-redis": "*",
+        "roave/security-advisories": "dev-latest",
+        "symfony/redis-messenger": "^6.0"
     },
     "config": {
         "sort-packages": true,

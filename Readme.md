@@ -27,3 +27,10 @@ Before the above commands works you must run the Update Manager once.
 ### Manual local XML tests
 
 When the server is running, you can upload an XML file in a browser at [localhost:5665/LTS/](http://localhost:5665/LTS/).
+
+## Project structure
+
+We loosely follow Slim's directory structure for DI dependencies etc., which is
+relatively unopinionated, to match other TBG apps. We don't actually use Slim
+itself since there are no web routes. Like our other PHP apps we use several Symfony
+libraries, which tend to play well together.

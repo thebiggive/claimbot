@@ -1,43 +1,23 @@
 <?php
 
-// todo something like this?! Is it overkill?
-
 declare(strict_types=1);
+
+use ClaimBot\Claimer;
+use ClaimBot\Commands\ClaimCommand;
+use GovTalk\GiftAid\GiftAid;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Application;
 
 $psr11App = require __DIR__ . '/bootstrap.php';
 
-use ClaimBot\Commands\ClaimCommand;
-use DI\Container;
-use Monolog\Handler\StreamHandler;
-use Monolog\Logger;
-use Monolog\Processor\UidProcessor;
-use Psr\Log\LoggerInterface; // TODO give commands a logger via DI, without Slim `app/` structure?
-use Symfony\Component\Console\Application;
-use Symfony\Component\Messenger\RoutableMessageBus; // TODO pass thru when consuming real msgs
-use Symfony\Component\Messenger\Transport\TransportInterface;
-
 $cliApp = new Application();
 
-//$messengerReceiverKey = 'receiver';
-//$messengerReceiverLocator = new Container();
-//$messengerReceiverLocator->set($messengerReceiverKey, $psr11App->get(TransportInterface::class));
-
-// TODO probably move deps out to dependencies.php and/or make LoggerInterface a service of the $psr11App.
-$loggerSettings = [
-    'name' => 'claimbot',
-    'path' => 'php://stdout',
-    'level' => Logger::DEBUG,
-];
-$logger = new Logger($loggerSettings['name']);
-
-$processor = new UidProcessor();
-$logger->pushProcessor($processor);
-
-$handler = new StreamHandler($loggerSettings['path'], $loggerSettings['level']);
-$logger->pushHandler($handler);
-
 $commands = [
-    new ClaimCommand($logger),
+    new ClaimCommand(
+        $psr11App->get(Claimer::class),
+        $psr11App->get(GiftAid::class),
+        $psr11App->get(LoggerInterface::class),
+    ),
 ];
 
 foreach ($commands as $command) {
