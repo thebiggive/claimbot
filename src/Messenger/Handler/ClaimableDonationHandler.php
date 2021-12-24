@@ -31,7 +31,8 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         private Claimer $claimer,
         private LoggerInterface $logger,
         private RoutableMessageBus $bus,
-    ) {}
+    ) {
+    }
 
     public function __invoke(Donation $message, Acknowledger $ack = null)
     {

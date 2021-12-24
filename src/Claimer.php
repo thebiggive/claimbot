@@ -84,6 +84,7 @@ class Claimer
             throw new HMRCRejectionException(print_r($claimOutcome['errors'], true));
         }
 
-        throw new DonationDataErrorsException($failedDonationErrors, print_r($claimOutcome['errors'], true)); // todo Handle better; don't clear biz errors?
+        // todo Handle better; don't clear biz errors?
+        throw new DonationDataErrorsException($failedDonationErrors, print_r($claimOutcome['errors'], true));
     }
 }

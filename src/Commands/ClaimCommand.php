@@ -38,6 +38,12 @@ class ClaimCommand extends Command
 
     public function execute(InputInterface $input, OutputInterface $output): int
     {
+        // Note for overseas donations – house_no is a misnomer and should contain a 'full' address up to 40 chars.
+        // No need for country to be part of the request
+        // "I can confirm that it is enough to confirm that they live outside of the UK and that the specific country
+        // does not need to be provided."
+        // We should add docs to this effect in the HMRC lib too.
+
         $sampleDonation = new Donation();
         $sampleDonation->donation_date = '2021-09-10';
         $sampleDonation->title = 'Ms';

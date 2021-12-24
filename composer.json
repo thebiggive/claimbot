@@ -16,7 +16,10 @@
     },
     "require-dev": {
         "ext-redis": "*",
+        "phpspec/prophecy-phpunit": "^2.0",
+        "phpunit/phpunit": "^9.5",
         "roave/security-advisories": "dev-latest",
+        "squizlabs/php_codesniffer": "^3.6",
         "symfony/redis-messenger": "^6.0"
     },
     "config": {
@@ -32,7 +35,11 @@
         "claimbot:claim": [
             "Composer\\Config::disableProcessTimeout",
             "php claimbot-cli.php claimbot:claim"
-        ]
+        ],
+        "lint:check": "phpcs --standard=phpcs.xml -s .",
+        "lint:fix": "phpcbf --standard=phpcs.xml -s .",
+        "test": "phpunit",
+        "test-with-coverage": "phpdbg -qrr ./vendor/bin/phpunit --coverage-clover=coverage.xml"
     },
     "license": "MIT",
     "authors": [
