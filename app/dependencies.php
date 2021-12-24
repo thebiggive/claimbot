@@ -38,14 +38,14 @@ return function (ContainerBuilder $containerBuilder) {
              * @link https://www.gov.uk/government/publications/transaction-engine-document-submission-protocol
              */
             $ga = new GiftAid(
-                getenv('MAIN_GATEWAY_SENDER_ID'),
-                getenv('MAIN_GATEWAY_SENDER_PASSWORD'), // The charity's own Govt Gateway user ID + password? OR switch to multi-claim
+                getenv('MAIN_GATEWAY_SENDER_ID'), // TBG's credentials as we're claiming as an Agent.
+                getenv('MAIN_GATEWAY_SENDER_PASSWORD'),
                 getenv('VENDOR_ID'),
                 'The Big Give ClaimBot',
                 getenv('APP_VERSION'),
                 getenv('APP_ENV') !== 'production',
                 null,
-//            'http://host.docker.internal:5665/LTS/LTSPostServlet' // Uncomment to use LTS rather than ETS.
+                // 'http://host.docker.internal:5665/LTS/LTSPostServlet' // Uncomment to use LTS rather than ETS.
             );
             $ga->setLogger($c->get(LoggerInterface::class));
             $ga->setVendorId(getenv('VENDOR_ID'));
