@@ -53,6 +53,8 @@ class Claimer
         //   a human-readable, helpful error message and 'location' an XPath locator. Not sure what 'number' means.
 
         $failedDonationErrors = [];
+        // Make a copy so we can remove donation-particular errors just from this var.
+        $nonDonationMappedErrors = $claimOutcome['errors'];
         if (!empty($claimOutcome['errors']['business'])) {
             foreach ($claimOutcome['errors']['business'] as $key => $error) {
                 if (!empty($error['donation_id'])) {
@@ -63,28 +65,28 @@ class Claimer
                         $error['location'],
                         $error['text'],
                     ));
-                    unset($claimOutcome['errors']['business'][$key]);
+                    unset($nonDonationMappedErrors['business'][$key]);
                 }
             }
         }
 
-        if (empty($claimOutcome['errors']['business'])) { // i.e. no errors without donation IDs remain.
-            unset($claimOutcome['errors']['business']);
+        if (empty($nonDonationMappedErrors['business'])) { // i.e. no errors without donation IDs remain.
+            unset($nonDonationMappedErrors['business']);
         }
 
         // Log remaining errors.
-        $this->logger->error('Remaining errors: ' . print_r($claimOutcome['errors'], true));
+        $this->logger->error('Remaining errors: ' . print_r($nonDonationMappedErrors, true));
 
-        if (empty($failedDonationErrors)) {
-            if (!empty($claimOutcome['errors']['fatal'])) {
-                throw new HMRCRejectionException('Fatal: ' . $claimOutcome['errors']['fatal'][0]['text']);
-            }
-
-            // todo handle these in the exc. properly
-            throw new HMRCRejectionException(print_r($claimOutcome['errors'], true));
+        if (!empty($failedDonationErrors)) {
+            $exception = new DonationDataErrorsException($failedDonationErrors);
+        } elseif (!empty($claimOutcome['errors']['fatal'])) {
+            $exception = new HMRCRejectionException('Fatal: ' . $claimOutcome['errors']['fatal'][0]['text']);
+        } else {
+            $exception = new HMRCRejectionException('HMRC submission errors');
         }
 
-        // todo Handle better; don't clear biz errors?
-        throw new DonationDataErrorsException($failedDonationErrors, print_r($claimOutcome['errors'], true));
+        $exception->setRawHMRCErrors($claimOutcome['errors']);
+
+        throw $exception;
     }
 }

@@ -9,9 +9,9 @@ class DonationDataErrorsException extends HMRCRejectionException
     /** @var array  2D, keyed on donation ID. Values are arrays with 'text' and 'location' with XML error details. */
     protected array $donationErrors;
 
-    public function __construct(array $donationsErrors, string $allErrorMessages)
+    public function __construct(array $donationsErrors)
     {
-        parent::__construct($allErrorMessages);
+        parent::__construct('Donation-specific errors');
         $this->setDonationErrors($donationsErrors);
     }
 

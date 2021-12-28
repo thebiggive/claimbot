@@ -13,7 +13,7 @@ class DonationDataErrorsExceptionTest extends TestCase
 
     public function setUp(): void
     {
-        $fullErrors = [
+        $donationErrors = [
             'idA' => [
                 'donation_id' => 'idA',
                 'message' => "Invalid content found at element 'Sur'",
@@ -28,15 +28,10 @@ class DonationDataErrorsExceptionTest extends TestCase
             ],
         ];
 
-        $errorMessages = print_r([
-            "Invalid content found at element 'Sur'",
-            "Invalid content found at element 'Fore'",
-        ], true);
-
-        $this->exception = new DonationDataErrorsException($fullErrors, $errorMessages);
+        $this->exception = new DonationDataErrorsException($donationErrors);
     }
 
-    public function testErrorListGetter()
+    public function testErrorListGetter(): void
     {
         $this->assertCount(2, $this->exception->getDonationErrors());
         $this->assertEquals(
@@ -44,13 +39,6 @@ class DonationDataErrorsExceptionTest extends TestCase
             $this->exception->getDonationErrors()['idA']['message'],
         );
 
-        $this->assertEquals(<<<EOT
-Array
-(
-    [0] => Invalid content found at element 'Sur'
-    [1] => Invalid content found at element 'Fore'
-)
-
-EOT, $this->exception->getMessage());
+        $this->assertEquals('Donation-specific errors', $this->exception->getMessage());
     }
 }
