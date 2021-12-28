@@ -7,7 +7,6 @@ namespace ClaimBot\Tests\Messenger\Handler;
 use ClaimBot\Claimer;
 use ClaimBot\Exception\DonationDataErrorsException;
 use ClaimBot\Exception\UnexpectedResponseException;
-use ClaimBot\Messenger\Donation;
 use ClaimBot\Messenger\Handler\ClaimableDonationHandler;
 use ClaimBot\Messenger\OutboundMessageBus;
 use ClaimBot\Tests\TestCase;
@@ -186,21 +185,5 @@ class ClaimableDonationHandlerTest extends TestCase
 
         // These return "The number of pending messages in the batch if $ack is not null".
         $this->assertEquals(0, $handler->__invoke($donation, $acknowledger));
-    }
-
-    private function getTestDonation(): Donation
-    {
-        $testDonation = new Donation();
-        $testDonation->id = 'abcd-1234';
-        $testDonation->donation_date = '2021-09-10';
-        $testDonation->title = 'Ms';
-        $testDonation->first_name = 'Mary';
-        $testDonation->last_name = 'Moore';
-        $testDonation->house_no = '1a';
-        $testDonation->postcode = 'N1 1AA';
-        $testDonation->amount = 123.45;
-        $testDonation->org_hmrc_ref = 'AB12345';
-
-        return $testDonation;
     }
 }

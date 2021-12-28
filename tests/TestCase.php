@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ClaimBot\Tests;
 
+use ClaimBot\Messenger\Donation;
 use DI\Container;
 use DI\ContainerBuilder;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
@@ -37,5 +38,21 @@ class TestCase extends PHPUnitTestCase
         $container->set(LoggerInterface::class, new NullLogger());
 
         return $container;
+    }
+
+    protected function getTestDonation(): Donation
+    {
+        $testDonation = new Donation();
+        $testDonation->id = 'abcd-1234';
+        $testDonation->donation_date = '2021-09-10';
+        $testDonation->title = 'Ms';
+        $testDonation->first_name = 'Mary';
+        $testDonation->last_name = 'Moore';
+        $testDonation->house_no = '1a';
+        $testDonation->postcode = 'N1 1AA';
+        $testDonation->amount = 123.45;
+        $testDonation->org_hmrc_ref = 'AB12345';
+
+        return $testDonation;
     }
 }
