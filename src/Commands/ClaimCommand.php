@@ -16,9 +16,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @todo Review in full! This is just a placeholder with hard-coded sample data for now.
- *
- * @todo the command should lock similarly to MatchBot's `LockingCommand`s, but probably
- * doesn't need the same inheritance structure for now in a 1-command app.
  */
 class ClaimCommand extends Command
 {

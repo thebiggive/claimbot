@@ -4,6 +4,16 @@ To allow calls to local, e.g. to ping the Local Test Service:
 
     docker-compose run --rm app composer run claimbot:claim
 
+## Service dependency notes
+
+### Queues and locking
+
+Because the live SQS queues are FIFO they guarantee at-most-once delivery of a given message.
+So even if something unexpected happened it should not be possible for the same messages to
+be double-claimed. For this reason and to benefit from the simplicity of using Symfony
+Messenger's `:consume` command directly instead of writing our own, we don't have explicit
+run-once locks via Symfony Lock or similar in this app.
+
 ## Running HMRC's Local Test Service
 
 This readme primarily assumes a *nix environment. HMRC's own documentation is for Windows and some of the workarounds
