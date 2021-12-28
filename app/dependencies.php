@@ -6,6 +6,7 @@ use ClaimBot\Claimer;
 use ClaimBot\Messenger\Donation;
 use ClaimBot\Messenger\Handler\ClaimableDonationHandler;
 use ClaimBot\Messenger\OutboundMessageBus;
+use ClaimBot\Messenger\Transport\FailuresTransportInterface;
 use DI\Container;
 use DI\ContainerBuilder;
 use GovTalk\GiftAid\GiftAid;
@@ -105,7 +106,7 @@ return function (ContainerBuilder $containerBuilder) {
             return new OutboundMessageBus([
                 new SendMessageMiddleware(new SendersLocator(
                     [
-                        Donation::class => [TransportInterface::class], // Outbound -> donation error queue.
+                        Donation::class => [FailuresTransportInterface::class], // Outbound -> donation error queue.
                     ],
                     $c,
                 )),
@@ -120,13 +121,26 @@ return function (ContainerBuilder $containerBuilder) {
         },
 
         // Outbound messages are all donation failures.
-        TransportInterface::class => static function (ContainerInterface $c): TransportInterface {
+        FailuresTransportInterface::class => static function (ContainerInterface $c): TransportInterface {
             $transportFactory = new TransportFactory([
                 new AmazonSqsTransportFactory(),
                 new RedisTransportFactory(),
             ]);
             return $transportFactory->createTransport(
                 getenv('MESSENGER_FAILURE_QUEUE_TRANSPORT_DSN'),
+                [],
+                new PhpSerializer(),
+            );
+        },
+
+        // Incoming messages are new donations to claim on.
+        TransportInterface::class => static function (ContainerInterface $c): TransportInterface {
+            $transportFactory = new TransportFactory([
+                new AmazonSqsTransportFactory(),
+                new RedisTransportFactory(),
+            ]);
+            return $transportFactory->createTransport(
+                getenv('MESSENGER_INCOMING_TRANSPORT_DSN'),
                 [],
                 new PhpSerializer(),
             );
