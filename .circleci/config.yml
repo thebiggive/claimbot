@@ -46,7 +46,7 @@ workflows:
           context:
             - docker-hub-creds
             - jira
-            - slack
+            - slack-new-webhooks
           post-steps:
             - jira/notify:
                 job_type: build
@@ -63,7 +63,7 @@ workflows:
           context:
             - docker-hub-creds
             - jira
-            - slack
+            - slack-new-webhooks
       - aws-ecr/build-and-push-image:
           requires:
             - test
@@ -89,7 +89,7 @@ workflows:
           context:
             - docker-hub-creds
             - jira
-            - slack
+            - slack-new-webhooks
       - aws-ecr/build-and-push-image:
           requires:
             - test
@@ -116,7 +116,7 @@ workflows:
           context:
             - docker-hub-creds
             - jira
-            - slack
+            - slack-new-webhooks
       - aws-ecr/build-and-push-image:
           requires:
             - test
