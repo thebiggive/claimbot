@@ -7,6 +7,7 @@ namespace ClaimBot\Tests;
 use ClaimBot\Claimer;
 use ClaimBot\Exception\DonationDataErrorsException;
 use ClaimBot\Exception\HMRCRejectionException;
+use ClaimBot\Exception\UnexpectedResponseException;
 use GovTalk\GiftAid\GiftAid;
 use Prophecy\Argument;
 use Psr\Log\NullLogger;
@@ -38,27 +39,21 @@ class ClaimerTest extends TestCase
     {
         $this->expectException(DonationDataErrorsException::class);
 
-        $donationErrorsException = new DonationDataErrorsException([
-            'idA' => [
-                'donation_id' => 'idA',
-                'message' => "Invalid content found at element 'Sur'",
-                'location' => '/hd:GovTalkMessage[1]/hd:Body[1]/r68:IRenvelope[1]/r68:R68[1]/' .
-                    'r68:Claim[1]/r68:Repayment[1]/r68:GAD[1]/r68:Donor[1]/r68:Sur[1]',
-            ],
-        ]);
-        $donationErrorsException->setRawHMRCErrors([
-            'business' => [
-                [
-                    'donation_id' => 'idA',
-                    'message' => "Invalid content found at element 'Sur'",
-                    'location' => '/hd:GovTalkMessage[1]/hd:Body[1]/r68:IRenvelope[1]/r68:R68[1]/' .
-                        'r68:Claim[1]/r68:Repayment[1]/r68:GAD[1]/r68:Donor[1]/r68:Sur[1]',
-                ],
-            ],
-        ]);
+        $hmrcBizError = [
+            'donation_id' => 'idA',
+            'message' => "Invalid content found at element 'Sur'",
+            'location' => '/hd:GovTalkMessage[1]/hd:Body[1]/r68:IRenvelope[1]/r68:R68[1]/' .
+                'r68:Claim[1]/r68:Repayment[1]/r68:GAD[1]/r68:Donor[1]/r68:Sur[1]',
+            'text' => 'Your submission failed due to business validation errors. Please see below for details.',
+        ];
 
         $giftAidProphecy = $this->prophesize(GiftAid::class);
-        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willThrow($donationErrorsException);
+        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willReturn([
+            'errors' => [
+                'business' => [$hmrcBizError],
+            ],
+            'donation_ids_with_errors' => ['idA'],
+        ]);
 
         $container = $this->getContainer();
         $container->set(GiftAid::class, $giftAidProphecy->reveal());
@@ -74,20 +69,23 @@ class ClaimerTest extends TestCase
     public function testGeneralFatalError(): void
     {
         $this->expectException(HMRCRejectionException::class);
-        $this->expectExceptionMessage('Fatal: Some fatal HMRC submission response error');
+        $this->expectExceptionMessage(
+            'Fatal: Authentication Failure. The supplied user credentials failed validation for the requested service.',
+        );
 
-        $generalFatalErrorException = new HMRCRejectionException('Fatal: Some fatal HMRC submission response error');
-        $generalFatalErrorException->setRawHMRCErrors([
-            'fatal' => [
-                [
-                    'message' => 'Some fatal HMRC submission response error',
-                    'location' => '/hd:GovTalkMessage[1]/hd:Body[1]/r68:IRenvelope[1]/r68:R68[1]/r68:Claim[1]',
-                ],
-            ],
-        ]);
+        $hmrcFatalError = [
+            'message' => 'Some fatal HMRC submission response error',
+            'location' => '/hd:GovTalkMessage[1]/hd:Body[1]/r68:IRenvelope[1]/r68:R68[1]/r68:Claim[1]',
+            'text' => 'Authentication Failure. The supplied user credentials failed validation for the requested ' .
+                'service.',
+        ];
 
         $giftAidProphecy = $this->prophesize(GiftAid::class);
-        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willThrow($generalFatalErrorException);
+        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willReturn([
+            'errors' => [
+                'fatal' => [$hmrcFatalError],
+            ],
+        ]);
 
         $container = $this->getContainer();
         $container->set(GiftAid::class, $giftAidProphecy->reveal());
@@ -105,19 +103,37 @@ class ClaimerTest extends TestCase
         $this->expectException(HMRCRejectionException::class);
         $this->expectExceptionMessage('HMRC submission errors');
 
-        $generalFatalErrorException = new HMRCRejectionException('HMRC submission errors');
-        $generalFatalErrorException->setRawHMRCErrors([
-            'fatal' => [],
-            'business' => [
-                [
-                    'message' => 'Some general biz HMRC submission response error',
-                    'location' => '/hd:GovTalkMessage[1]/hd:Body[1]/r68:IRenvelope[1]/r68:R68[1]/r68:Claim[1]',
-                ],
+        $hmrcBizError = [
+            'message' => 'Some general biz HMRC submission response error',
+            'location' => '/hd:GovTalkMessage[1]/hd:Body[1]/r68:IRenvelope[1]/r68:R68[1]/r68:Claim[1]',
+            'text' => 'Some general biz HMRC submission response error text',
+        ];
+
+        $giftAidProphecy = $this->prophesize(GiftAid::class);
+        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willReturn([
+            'errors' => [
+                'business' => [$hmrcBizError],
             ],
         ]);
 
+        $container = $this->getContainer();
+        $container->set(GiftAid::class, $giftAidProphecy->reveal());
+
+        $claimer = new Claimer(
+            $container->get(GiftAid::class),
+            new NullLogger(),
+        );
+
+        $claimer->claim([$this->getTestDonation()]);
+    }
+
+    public function testNoCorrelationIdOrErrors(): void
+    {
+        $this->expectException(UnexpectedResponseException::class);
+        $this->expectExceptionMessage('Response had neither correlation ID nor errors');
+
         $giftAidProphecy = $this->prophesize(GiftAid::class);
-        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willThrow($generalFatalErrorException);
+        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willReturn([]);
 
         $container = $this->getContainer();
         $container->set(GiftAid::class, $giftAidProphecy->reveal());

@@ -43,7 +43,7 @@ class Claimer
         if (empty($claimOutcome['errors'])) {
             $this->logger->error('Neither correlation ID nor errors. Is the endpoint valid?');
 
-            throw new UnexpectedResponseException();
+            throw new UnexpectedResponseException('Response had neither correlation ID nor errors');
         }
 
         // $response['errors'] is a 3D array:
