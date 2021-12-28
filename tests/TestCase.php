@@ -52,6 +52,7 @@ class TestCase extends PHPUnitTestCase
         $testDonation->postcode = 'N1 1AA';
         $testDonation->amount = 123.45;
         $testDonation->org_hmrc_ref = 'AB12345';
+        $testDonation->org_name = 'Test Charity';
 
         return $testDonation;
     }

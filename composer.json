@@ -10,8 +10,9 @@
         "php-di/php-di": "^6.3",
         "symfony/amazon-sqs-messenger": "^6.0",
         "symfony/console": "^6.0",
+        "symfony/event-dispatcher": "^6.0",
         "symfony/messenger": "^6.0",
-        "thebiggive/hmrc-gift-aid": "^1.0.0-beta7"
+        "thebiggive/hmrc-gift-aid": "^1.0.0-beta8"
     },
     "require-dev": {
         "ext-redis": "*",
@@ -36,9 +37,9 @@
         }
     },
     "scripts": {
-        "claimbot:claim": [
+        "messenger:consume": [
             "Composer\\Config::disableProcessTimeout",
-            "php claimbot-cli.php claimbot:claim"
+            "php claimbot-cli.php messenger:consume -vv --time-limit=600"
         ],
         "lint:check": "phpcs --standard=phpcs.xml -s .",
         "lint:fix": "phpcbf --standard=phpcs.xml -s .",

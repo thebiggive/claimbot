@@ -8,6 +8,7 @@ use ClaimBot\Claimer;
 use ClaimBot\Exception\DonationDataErrorsException;
 use ClaimBot\Exception\HMRCRejectionException;
 use ClaimBot\Exception\UnexpectedResponseException;
+use GovTalk\GiftAid\ClaimingOrganisation;
 use GovTalk\GiftAid\GiftAid;
 use Prophecy\Argument;
 use Psr\Log\NullLogger;
@@ -17,6 +18,10 @@ class ClaimerTest extends TestCase
     public function testClaimSuccess(): void
     {
         $giftAidProphecy = $this->prophesize(GiftAid::class);
+        $giftAidProphecy->clearClaimingOrganisations()->shouldBeCalledOnce();
+        $giftAidProphecy->addClaimingOrganisation(Argument::type(ClaimingOrganisation::class))
+            ->shouldBeCalledOnce();
+        $giftAidProphecy->setClaimToDate('2021-09-10')->shouldBeCalledOnce();
         $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willReturn([
             'correlationid' => 'someCorrId123',
             'claim_data_xml' => '<?xml not-real-response-xml ?>',
@@ -48,7 +53,11 @@ class ClaimerTest extends TestCase
         ];
 
         $giftAidProphecy = $this->prophesize(GiftAid::class);
-        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willReturn([
+        $giftAidProphecy->clearClaimingOrganisations()->shouldBeCalledOnce();
+        $giftAidProphecy->addClaimingOrganisation(Argument::type(ClaimingOrganisation::class))
+            ->shouldBeCalledOnce();
+        $giftAidProphecy->setClaimToDate('2021-09-10')->shouldBeCalledOnce();
+        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->shouldBeCalledOnce()->willReturn([
             'errors' => [
                 'business' => [$hmrcBizError],
             ],
@@ -81,7 +90,11 @@ class ClaimerTest extends TestCase
         ];
 
         $giftAidProphecy = $this->prophesize(GiftAid::class);
-        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willReturn([
+        $giftAidProphecy->clearClaimingOrganisations()->shouldBeCalledOnce();
+        $giftAidProphecy->addClaimingOrganisation(Argument::type(ClaimingOrganisation::class))
+            ->shouldBeCalledOnce();
+        $giftAidProphecy->setClaimToDate('2021-09-10')->shouldBeCalledOnce();
+        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->shouldBeCalledOnce()->willReturn([
             'errors' => [
                 'fatal' => [$hmrcFatalError],
             ],
@@ -110,7 +123,11 @@ class ClaimerTest extends TestCase
         ];
 
         $giftAidProphecy = $this->prophesize(GiftAid::class);
-        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willReturn([
+        $giftAidProphecy->clearClaimingOrganisations()->shouldBeCalledOnce();
+        $giftAidProphecy->addClaimingOrganisation(Argument::type(ClaimingOrganisation::class))
+            ->shouldBeCalledOnce();
+        $giftAidProphecy->setClaimToDate('2021-09-10')->shouldBeCalledOnce();
+        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->shouldBeCalledOnce()->willReturn([
             'errors' => [
                 'business' => [$hmrcBizError],
             ],
@@ -133,7 +150,11 @@ class ClaimerTest extends TestCase
         $this->expectExceptionMessage('Response had neither correlation ID nor errors');
 
         $giftAidProphecy = $this->prophesize(GiftAid::class);
-        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willReturn([]);
+        $giftAidProphecy->clearClaimingOrganisations()->shouldBeCalledOnce();
+        $giftAidProphecy->addClaimingOrganisation(Argument::type(ClaimingOrganisation::class))
+            ->shouldBeCalledOnce();
+        $giftAidProphecy->setClaimToDate('2021-09-10')->shouldBeCalledOnce();
+        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->shouldBeCalledOnce()->willReturn([]);
 
         $container = $this->getContainer();
         $container->set(GiftAid::class, $giftAidProphecy->reveal());

@@ -29,7 +29,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         private Claimer $claimer,
         private LoggerInterface $logger,
         private OutboundMessageBus $bus,
-        private int $donationsPerClaim, // TODO get from env var for real runs, via cmd
+        private int $donationsPerClaim = 50,
     ) {
     }
 

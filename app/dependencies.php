@@ -33,7 +33,7 @@ return function (ContainerBuilder $containerBuilder) {
             return new Claimer($c->get(GiftAid::class), $c->get(LoggerInterface::class));
         },
 
-        GiftAid:: class => function (ContainerInterface $c) {
+        GiftAid::class => function (ContainerInterface $c) {
             /**
              * Password must be a govt gateway one in plain text. MD5 was supported before but retired.
              * @link https://www.gov.uk/government/publications/transaction-engine-document-submission-protocol
@@ -43,7 +43,7 @@ return function (ContainerBuilder $containerBuilder) {
                 getenv('MAIN_GATEWAY_SENDER_PASSWORD'),
                 getenv('VENDOR_ID'),
                 'The Big Give ClaimBot',
-                getenv('APP_VERSION'),
+                $c->get('settings')['version'],
                 getenv('APP_ENV') !== 'production',
                 null,
                 // 'http://host.docker.internal:5665/LTS/LTSPostServlet' // Uncomment to use LTS rather than ETS.
@@ -54,14 +54,13 @@ return function (ContainerBuilder $containerBuilder) {
             // Not auth'd with ETS (for now).
             $ga->setAgentDetails(
                 getenv('HMRC_AGENT_NO'),
-                'Agent Company',
+                getenv('HMRC_AGENT_NAME'),
                 [
-                    // TODO get real agent info from env vars or similar
-                    'line' => ['Line 1', 'Line 2'],
+                    'line' => explode(',', getenv('HMRC_AGENT_ADDRESS')),
                     'country' => 'United Kingdom',
                 ],
                 null,
-                'myAgentRef',
+                'ClaimBot-' . $c->get('settings')['version'] . date('Y-m-d'),
             );
 
             // ETS returns an error if you set a GatewayTimestamp – can only use this for LTS.
@@ -127,7 +126,7 @@ return function (ContainerBuilder $containerBuilder) {
                 new RedisTransportFactory(),
             ]);
             return $transportFactory->createTransport(
-                getenv('MESSENGER_FAILURE_QUEUE_TRANSPORT_DSN'), // todo prep var, test against Redis locally
+                getenv('MESSENGER_FAILURE_QUEUE_TRANSPORT_DSN'),
                 [],
                 new PhpSerializer(),
             );

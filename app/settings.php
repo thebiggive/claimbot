@@ -14,6 +14,7 @@ return function (ContainerBuilder $containerBuilder) {
                 'path' => 'php://stdout',
                 'level' => Logger::DEBUG,
             ],
+            'version' => getenv('APP_VERSION'),
         ],
     ]);
 };

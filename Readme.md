@@ -2,7 +2,14 @@
 
 To allow calls to local, e.g. to ping the Local Test Service:
 
-    docker-compose run --rm app composer run claimbot:claim
+    docker-compose run --rm app composer run messenger:consume
+
+## What the consumer does
+
+As you can see in [`composer.json`](./composer.json)'s `scripts`, the `messenger:consume`
+PHP app command is used, which is built into Symfony Messenger. This means no complexity
+from maintaining or unit testing our own Command. We rely on the `BatchHandlerInterface`
+added in Messenger v5.4 to process batches of 50 donations in non-unit-test environments.
 
 ## Service dependency notes
 

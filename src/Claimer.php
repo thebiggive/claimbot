@@ -8,6 +8,8 @@ use ClaimBot\Exception\DonationDataErrorsException;
 use ClaimBot\Exception\HMRCRejectionException;
 use ClaimBot\Exception\UnexpectedResponseException;
 use ClaimBot\Messenger\Donation;
+use DateTime;
+use GovTalk\GiftAid\ClaimingOrganisation;
 use GovTalk\GiftAid\GiftAid;
 use Psr\Log\LoggerInterface;
 
@@ -27,10 +29,30 @@ class Claimer
      */
     public function claim(array $donations): bool
     {
+        $this->giftAid->clearClaimingOrganisations();
+        $orgHMRCRefsAdded = [];
+
+        /** @var ?DateTime $claimToDate */
+        $claimToDate = null;
+
         $plainArrayDonations = [];
         foreach ($donations as $donation) {
             $plainArrayDonations[] = (array) $donation;
+
+            if (!in_array($donation->org_hmrc_ref, $orgHMRCRefsAdded, true)) {
+                $this->giftAid->addClaimingOrganisation(new ClaimingOrganisation(
+                    $donation->org_name,
+                    $donation->org_hmrc_ref,
+                ));
+            }
+
+            if ($claimToDate === null || new \DateTime($donation->donation_date) > $claimToDate) {
+                $claimToDate = new \DateTime($donation->donation_date);
+            }
         }
+
+        // Must be date of most recent donation in the current claim.
+        $this->giftAid->setClaimToDate($claimToDate->format('Y-m-d'));
 
         $claimOutcome = $this->giftAid->giftAidSubmit($plainArrayDonations);
 
