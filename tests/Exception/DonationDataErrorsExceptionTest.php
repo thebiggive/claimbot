@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ClaimBot\Tests\Exception;
 
 use ClaimBot\Exception\DonationDataErrorsException;
-use PHPUnit\Framework\TestCase;
+use ClaimBot\Tests\TestCase;
 
 class DonationDataErrorsExceptionTest extends TestCase
 {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use ClaimBot\Claimer;
 use ClaimBot\Messenger\Donation;
 use ClaimBot\Messenger\Handler\ClaimableDonationHandler;
+use ClaimBot\Messenger\OutboundMessageBus;
 use DI\Container;
 use DI\ContainerBuilder;
 use GovTalk\GiftAid\GiftAid;
@@ -87,14 +88,9 @@ return function (ContainerBuilder $containerBuilder) {
             return $logger;
         },
 
+        // Used for inbound ready to process donation messages.
         MessageBusInterface::class => static function (ContainerInterface $c): MessageBusInterface {
             return new MessageBus([
-                new SendMessageMiddleware(new SendersLocator(
-                    [
-                        Donation::class => [TransportInterface::class], // Outbound -> donation error queue.
-                    ],
-                    $c,
-                )),
                 new HandleMessageMiddleware(new HandlersLocator(
                     [
                         Donation::class => [$c->get(ClaimableDonationHandler::class)], // Inbound -> newly processable.
@@ -103,9 +99,23 @@ return function (ContainerBuilder $containerBuilder) {
             ]);
         },
 
+        // Used for sending messages to the outbound error queue. This had to be a distinct bus from the above
+        // `MessageBusInterface` definition, to avoid a circular dependency via ClaimableDonationHandler which needs
+        // the outbound bus to send its errors to.
+        OutboundMessageBus::class => static function (ContainerInterface $c): OutboundMessageBus {
+            return new OutboundMessageBus([
+                new SendMessageMiddleware(new SendersLocator(
+                    [
+                        Donation::class => [TransportInterface::class], // Outbound -> donation error queue.
+                    ],
+                    $c,
+                )),
+            ]);
+        },
+
         RoutableMessageBus::class => static function (ContainerInterface $c): RoutableMessageBus {
             $busContainer = new Container();
-            $busContainer->set('claimbot.donation.error', $c->get(MessageBusInterface::class));
+            $busContainer->set('claimbot.donation.error', $c->get(OutboundMessageBus::class));
 
             return new RoutableMessageBus($busContainer);
         },
