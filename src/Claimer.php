@@ -8,6 +8,8 @@ use ClaimBot\Exception\DonationDataErrorsException;
 use ClaimBot\Exception\HMRCRejectionException;
 use ClaimBot\Exception\UnexpectedResponseException;
 use ClaimBot\Messenger\Donation;
+use DateTime;
+use GovTalk\GiftAid\ClaimingOrganisation;
 use GovTalk\GiftAid\GiftAid;
 use Psr\Log\LoggerInterface;
 
@@ -27,10 +29,30 @@ class Claimer
      */
     public function claim(array $donations): bool
     {
+        $this->giftAid->clearClaimingOrganisations();
+        $orgHMRCRefsAdded = [];
+
+        /** @var ?DateTime $claimToDate */
+        $claimToDate = null;
+
         $plainArrayDonations = [];
         foreach ($donations as $donation) {
             $plainArrayDonations[] = (array) $donation;
+
+            if (!in_array($donation->org_hmrc_ref, $orgHMRCRefsAdded, true)) {
+                $this->giftAid->addClaimingOrganisation(new ClaimingOrganisation(
+                    $donation->org_name,
+                    $donation->org_hmrc_ref,
+                ));
+            }
+
+            if ($claimToDate === null || new \DateTime($donation->donation_date) > $claimToDate) {
+                $claimToDate = new \DateTime($donation->donation_date);
+            }
         }
+
+        // Must be date of most recent donation in the current claim.
+        $this->giftAid->setClaimToDate($claimToDate->format('Y-m-d'));
 
         $claimOutcome = $this->giftAid->giftAidSubmit($plainArrayDonations);
 
@@ -43,7 +65,7 @@ class Claimer
         if (empty($claimOutcome['errors'])) {
             $this->logger->error('Neither correlation ID nor errors. Is the endpoint valid?');
 
-            throw new UnexpectedResponseException();
+            throw new UnexpectedResponseException('Response had neither correlation ID nor errors');
         }
 
         // $response['errors'] is a 3D array:
@@ -53,6 +75,8 @@ class Claimer
         //   a human-readable, helpful error message and 'location' an XPath locator. Not sure what 'number' means.
 
         $failedDonationErrors = [];
+        // Make a copy so we can remove donation-particular errors just from this var.
+        $nonDonationMappedErrors = $claimOutcome['errors'];
         if (!empty($claimOutcome['errors']['business'])) {
             foreach ($claimOutcome['errors']['business'] as $key => $error) {
                 if (!empty($error['donation_id'])) {
@@ -63,27 +87,28 @@ class Claimer
                         $error['location'],
                         $error['text'],
                     ));
-                    unset($claimOutcome['errors']['business'][$key]);
+                    unset($nonDonationMappedErrors['business'][$key]);
                 }
             }
         }
 
-        if (empty($claimOutcome['errors']['business'])) { // i.e. no errors without donation IDs remain.
-            unset($claimOutcome['errors']['business']);
+        if (empty($nonDonationMappedErrors['business'])) { // i.e. no errors without donation IDs remain.
+            unset($nonDonationMappedErrors['business']);
         }
 
         // Log remaining errors.
-        $this->logger->error('Remaining errors: ' . print_r($claimOutcome['errors'], true));
+        $this->logger->error('Remaining errors: ' . print_r($nonDonationMappedErrors, true));
 
-        if (empty($failedDonationErrors)) {
-            if (!empty($claimOutcome['errors']['fatal'])) {
-                throw new HMRCRejectionException('Fatal: ' . $claimOutcome['errors']['fatal'][0]['text']);
-            }
-
-            // todo handle these in the exc. properly
-            throw new HMRCRejectionException(print_r($claimOutcome['errors'], true));
+        if (!empty($failedDonationErrors)) {
+            $exception = new DonationDataErrorsException($failedDonationErrors);
+        } elseif (!empty($claimOutcome['errors']['fatal'])) {
+            $exception = new HMRCRejectionException('Fatal: ' . $claimOutcome['errors']['fatal'][0]['text']);
+        } else {
+            $exception = new HMRCRejectionException('HMRC submission errors');
         }
 
-        throw new DonationDataErrorsException($failedDonationErrors, print_r($claimOutcome['errors'], true)); // todo Handle better; don't clear biz errors?
+        $exception->setRawHMRCErrors($claimOutcome['errors']);
+
+        throw $exception;
     }
 }

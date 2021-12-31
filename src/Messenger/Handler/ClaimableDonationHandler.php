@@ -8,13 +8,13 @@ use ClaimBot\Claimer;
 use ClaimBot\Exception\ClaimException;
 use ClaimBot\Exception\DonationDataErrorsException;
 use ClaimBot\Messenger\Donation;
+use ClaimBot\Messenger\OutboundMessageBus;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Handler\Acknowledger;
 use Symfony\Component\Messenger\Handler\BatchHandlerInterface;
 use Symfony\Component\Messenger\Handler\BatchHandlerTrait;
-use Symfony\Component\Messenger\RoutableMessageBus;
 use Symfony\Component\Messenger\Stamp\BusNameStamp;
 use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 
@@ -25,13 +25,13 @@ class ClaimableDonationHandler implements BatchHandlerInterface
 {
     use BatchHandlerTrait;
 
-    private static int $donationsPerClaim = 50;
-
     public function __construct(
         private Claimer $claimer,
         private LoggerInterface $logger,
-        private RoutableMessageBus $bus,
-    ) {}
+        private OutboundMessageBus $bus,
+        private int $donationsPerClaim = 50,
+    ) {
+    }
 
     public function __invoke(Donation $message, Acknowledger $ack = null)
     {
@@ -97,6 +97,6 @@ class ClaimableDonationHandler implements BatchHandlerInterface
 
     private function shouldFlush(): bool
     {
-        return static::$donationsPerClaim <= \count($this->jobs);
+        return $this->donationsPerClaim <= \count($this->jobs);
     }
 }
