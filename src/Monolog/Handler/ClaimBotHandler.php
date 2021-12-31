@@ -17,15 +17,17 @@ class ClaimBotHandler extends GroupHandler
         array $loggerSettings,
         string $environment,
     ) {
-        // Normal error + other runtime logs reach CloudWatch Logs *or* local container output via stdout.
+        // Normal error + other runtime logs reach CloudWatch Logs *or* local container output, typically via stdout.
         $streamHandler = new StreamHandler($loggerSettings['path'], $loggerSettings['level']);
         $streamHandler->pushProcessor(new PsrLogMessageProcessor());
 
         $awsRegion = $loggerSettings['cloudwatch']['region'];
         $groupName = "tbg-$environment-$awsRegion-claimbot";
 
-        $baseRequestHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_requests');
-        $baseResponseHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_responses');
+        $retentionDays = 366 * 7; // Keep all claim logs for the full duration HMRC might want info from us.
+
+        $baseRequestHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_requests', $retentionDays);
+        $baseResponseHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_responses', $retentionDays);
 
         $handlers = [
             $streamHandler,

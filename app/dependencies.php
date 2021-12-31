@@ -100,7 +100,6 @@ return function (ContainerBuilder $containerBuilder) {
                 $loggerSettings,
                 $c->get('settings')['environment'],
             );
-
             $logger->pushHandler($handler);
 
             return $logger;

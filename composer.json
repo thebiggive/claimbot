@@ -6,6 +6,7 @@
     "prefer-stable": true,
     "require": {
         "php": "^8.0.2",
+        "maxbanton/cwh": "^2.0",
         "monolog/monolog": "^2.3",
         "php-di/php-di": "^6.3",
         "symfony/amazon-sqs-messenger": "^6.0",
