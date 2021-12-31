@@ -2,13 +2,16 @@
 
 declare(strict_types=1);
 
+use Aws\CloudWatchLogs\CloudWatchLogsClient;
 use ClaimBot\Claimer;
 use ClaimBot\Messenger\Donation;
 use ClaimBot\Messenger\Handler\ClaimableDonationHandler;
+use ClaimBot\Messenger\OutboundMessageBus;
+use ClaimBot\Messenger\Transport\FailuresTransportInterface;
+use ClaimBot\Monolog\Handler\ClaimBotHandler;
 use DI\Container;
 use DI\ContainerBuilder;
 use GovTalk\GiftAid\GiftAid;
-use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
 use Psr\Container\ContainerInterface;
@@ -32,20 +35,32 @@ return function (ContainerBuilder $containerBuilder) {
             return new Claimer($c->get(GiftAid::class), $c->get(LoggerInterface::class));
         },
 
-        GiftAid:: class => function (ContainerInterface $c) {
+        CloudWatchLogsClient::class => function (ContainerInterface $c): CloudWatchLogsClient {
+            $cloudwatchSettings = $c->get('settings')['logger']['cloudwatch'];
+            return new CloudWatchLogsClient([
+                'region' => $cloudwatchSettings['region'],
+                'version' => 'latest',
+                'credentials' => [
+                    'key' => $cloudwatchSettings['key'],
+                    'secret' => $cloudwatchSettings['secret'],
+                ],
+            ]);
+        },
+
+        GiftAid::class => function (ContainerInterface $c) {
             /**
              * Password must be a govt gateway one in plain text. MD5 was supported before but retired.
              * @link https://www.gov.uk/government/publications/transaction-engine-document-submission-protocol
              */
             $ga = new GiftAid(
-                getenv('MAIN_GATEWAY_SENDER_ID'),
-                getenv('MAIN_GATEWAY_SENDER_PASSWORD'), // The charity's own Govt Gateway user ID + password? OR switch to multi-claim
+                getenv('MAIN_GATEWAY_SENDER_ID'), // TBG's credentials as we're claiming as an Agent.
+                getenv('MAIN_GATEWAY_SENDER_PASSWORD'),
                 getenv('VENDOR_ID'),
                 'The Big Give ClaimBot',
-                getenv('APP_VERSION'),
+                $c->get('settings')['version'],
                 getenv('APP_ENV') !== 'production',
                 null,
-//            'http://host.docker.internal:5665/LTS/LTSPostServlet' // Uncomment to use LTS rather than ETS.
+                // 'http://host.docker.internal:5665/LTS/LTSPostServlet' // Uncomment to use LTS rather than ETS.
             );
             $ga->setLogger($c->get(LoggerInterface::class));
             $ga->setVendorId(getenv('VENDOR_ID'));
@@ -53,14 +68,13 @@ return function (ContainerBuilder $containerBuilder) {
             // Not auth'd with ETS (for now).
             $ga->setAgentDetails(
                 getenv('HMRC_AGENT_NO'),
-                'Agent Company',
+                getenv('HMRC_AGENT_NAME'),
                 [
-                    // TODO get real agent info from env vars or similar
-                    'line' => ['Line 1', 'Line 2'],
+                    'line' => explode(',', getenv('HMRC_AGENT_ADDRESS')),
                     'country' => 'United Kingdom',
                 ],
                 null,
-                'myAgentRef',
+                'ClaimBot-' . $c->get('settings')['version'] . date('Y-m-d'),
             );
 
             // ETS returns an error if you set a GatewayTimestamp – can only use this for LTS.
@@ -81,20 +95,19 @@ return function (ContainerBuilder $containerBuilder) {
             $processor = new UidProcessor();
             $logger->pushProcessor($processor);
 
-            $handler = new StreamHandler($loggerSettings['path'], $loggerSettings['level']);
+            $handler = new ClaimBotHandler(
+                $c->get(CloudWatchLogsClient::class),
+                $loggerSettings,
+                $c->get('settings')['environment'],
+            );
             $logger->pushHandler($handler);
 
             return $logger;
         },
 
+        // Used for inbound ready to process donation messages.
         MessageBusInterface::class => static function (ContainerInterface $c): MessageBusInterface {
             return new MessageBus([
-                new SendMessageMiddleware(new SendersLocator(
-                    [
-                        Donation::class => [TransportInterface::class], // Outbound -> donation error queue.
-                    ],
-                    $c,
-                )),
                 new HandleMessageMiddleware(new HandlersLocator(
                     [
                         Donation::class => [$c->get(ClaimableDonationHandler::class)], // Inbound -> newly processable.
@@ -103,21 +116,48 @@ return function (ContainerBuilder $containerBuilder) {
             ]);
         },
 
+        // Used for sending messages to the outbound error queue. This had to be a distinct bus from the above
+        // `MessageBusInterface` definition, to avoid a circular dependency via ClaimableDonationHandler which needs
+        // the outbound bus to send its errors to.
+        OutboundMessageBus::class => static function (ContainerInterface $c): OutboundMessageBus {
+            return new OutboundMessageBus([
+                new SendMessageMiddleware(new SendersLocator(
+                    [
+                        Donation::class => [FailuresTransportInterface::class], // Outbound -> donation error queue.
+                    ],
+                    $c,
+                )),
+            ]);
+        },
+
         RoutableMessageBus::class => static function (ContainerInterface $c): RoutableMessageBus {
             $busContainer = new Container();
-            $busContainer->set('claimbot.donation.error', $c->get(MessageBusInterface::class));
+            $busContainer->set('claimbot.donation.error', $c->get(OutboundMessageBus::class));
 
             return new RoutableMessageBus($busContainer);
         },
 
         // Outbound messages are all donation failures.
+        FailuresTransportInterface::class => static function (ContainerInterface $c): TransportInterface {
+            $transportFactory = new TransportFactory([
+                new AmazonSqsTransportFactory(),
+                new RedisTransportFactory(),
+            ]);
+            return $transportFactory->createTransport(
+                getenv('MESSENGER_FAILURE_QUEUE_TRANSPORT_DSN'),
+                [],
+                new PhpSerializer(),
+            );
+        },
+
+        // Incoming messages are new donations to claim on.
         TransportInterface::class => static function (ContainerInterface $c): TransportInterface {
             $transportFactory = new TransportFactory([
                 new AmazonSqsTransportFactory(),
                 new RedisTransportFactory(),
             ]);
             return $transportFactory->createTransport(
-                getenv('MESSENGER_FAILURE_QUEUE_TRANSPORT_DSN'), // todo prep var, test against Redis locally
+                getenv('MESSENGER_INCOMING_TRANSPORT_DSN'),
                 [],
                 new PhpSerializer(),
             );

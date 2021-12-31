@@ -2,5 +2,6 @@
 vendor/
 
 var/cache/**
+.phpunit.result.cache
 
 .idea/

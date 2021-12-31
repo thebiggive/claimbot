@@ -1,8 +1,31 @@
-# Run a sample command
+# ClaimBot
 
-To allow calls to local, e.g. to ping the Local Test Service:
+Microservice for submitting Gift Aid claims
 
-    docker-compose run --rm app composer run claimbot:claim
+## Run a claim command
+
+    docker-compose run --rm app composer run messenger:consume
+
+## Run unit tests
+
+    docker-compose run --rm app composer run test
+
+## What the consumer does
+
+As you can see in [`composer.json`](./composer.json)'s `scripts`, the `messenger:consume`
+PHP app command is used, which is built into Symfony Messenger. This means no complexity
+from maintaining or unit testing our own Command. We rely on the `BatchHandlerInterface`
+added in Messenger v5.4 to process batches of 50 donations in non-unit-test environments.
+
+## Service dependency notes
+
+### Queues and locking
+
+Because the live SQS queues are FIFO they guarantee at-most-once delivery of a given message.
+So even if something unexpected happened it should not be possible for the same messages to
+be double-claimed. For this reason and to benefit from the simplicity of using Symfony
+Messenger's `:consume` command directly instead of writing our own, we don't have explicit
+run-once locks via Symfony Lock or similar in this app.
 
 ## Running HMRC's Local Test Service
 
