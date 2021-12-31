@@ -12,7 +12,7 @@
         "symfony/console": "^6.0",
         "symfony/event-dispatcher": "^6.0",
         "symfony/messenger": "^6.0",
-        "thebiggive/hmrc-gift-aid": "^1.0.0-beta8"
+        "thebiggive/hmrc-gift-aid": "^1.0.0-beta9"
     },
     "require-dev": {
         "ext-redis": "*",

@@ -1,8 +1,14 @@
-# Run a sample command
+# ClaimBot
 
-To allow calls to local, e.g. to ping the Local Test Service:
+Microservice for submitting Gift Aid claims
+
+## Run a claim command
 
     docker-compose run --rm app composer run messenger:consume
+
+## Run unit tests
+
+    docker-compose run --rm app composer run test
 
 ## What the consumer does
 

@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
+use Aws\CloudWatchLogs\CloudWatchLogsClient;
 use ClaimBot\Claimer;
 use ClaimBot\Messenger\Donation;
 use ClaimBot\Messenger\Handler\ClaimableDonationHandler;
 use ClaimBot\Messenger\OutboundMessageBus;
 use ClaimBot\Messenger\Transport\FailuresTransportInterface;
+use ClaimBot\Monolog\Handler\ClaimBotHandler;
 use DI\Container;
 use DI\ContainerBuilder;
 use GovTalk\GiftAid\GiftAid;
-use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
 use Psr\Container\ContainerInterface;
@@ -32,6 +33,18 @@ return function (ContainerBuilder $containerBuilder) {
     $containerBuilder->addDefinitions([
         Claimer::class => function (ContainerInterface $c) {
             return new Claimer($c->get(GiftAid::class), $c->get(LoggerInterface::class));
+        },
+
+        CloudWatchLogsClient::class => function (ContainerInterface $c): CloudWatchLogsClient {
+            $cloudwatchSettings = $c->get('settings')['logger']['cloudwatch'];
+            return new CloudWatchLogsClient([
+                'region' => $cloudwatchSettings['region'],
+                'version' => 'latest',
+                'credentials' => [
+                    'key' => $cloudwatchSettings['key'],
+                    'secret' => $cloudwatchSettings['secret'],
+                ],
+            ]);
         },
 
         GiftAid::class => function (ContainerInterface $c) {
@@ -82,7 +95,12 @@ return function (ContainerBuilder $containerBuilder) {
             $processor = new UidProcessor();
             $logger->pushProcessor($processor);
 
-            $handler = new StreamHandler($loggerSettings['path'], $loggerSettings['level']);
+            $handler = new ClaimBotHandler(
+                $c->get(CloudWatchLogsClient::class),
+                $loggerSettings,
+                $c->get('settings')['environment'],
+            );
+
             $logger->pushHandler($handler);
 
             return $logger;
