@@ -67,6 +67,8 @@ workflows:
       - aws-ecr/build-and-push-image:
           context:
             - ecs-deploys
+            - jira
+            - slack-new-webhooks
           requires:
             - test
           repo: thebiggive-claimbot
@@ -95,6 +97,8 @@ workflows:
       - aws-ecr/build-and-push-image:
           context:
             - ecs-deploys
+            - jira
+            - slack-new-webhooks
           requires:
             - test
           repo: thebiggive-claimbot
@@ -124,6 +128,8 @@ workflows:
       - aws-ecr/build-and-push-image:
           context:
             - ecs-deploys
+            - jira
+            - slack-new-webhooks
           requires:
             - test
           repo: thebiggive-claimbot
