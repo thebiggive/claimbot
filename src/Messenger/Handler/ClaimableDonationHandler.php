@@ -57,8 +57,6 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                 $ack->ack(true);
             }
         } catch (DonationDataErrorsException $donationDataErrorsException) {
-            // todo check this is also error logged with more detail, with current approach.
-
             foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
                 $this->sendToErrorQueue($donations[$donationId]); // Let MatchBot record that there's an error.
 

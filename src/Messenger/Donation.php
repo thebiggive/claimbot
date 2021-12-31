@@ -3,12 +3,9 @@
 namespace ClaimBot\Messenger;
 
 /**
- * One possibility is we publish this whole app and then load this class into MatchBot, to determine
- * the format for SQS messages to be serialised when publishing. TODO think more about this.
- *
- * TODO how do we pass through which charity it's for? Does that belong in an element 'higher' in the queued message
- * or is it cleaner for every donation to get its own standalone message and to aggregate them inside ClaimBot before
- * pushing to HMRC?
+ * For now, MatchBot essentially has a copy of this model as `MatchBot\Application\Messenger\Donation`.
+ * While it remains very simple, the complexity we'd add by having both apps load this class from a shared
+ * library dependency doesn't seem worth it.
  */
 class Donation
 {
