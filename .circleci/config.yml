@@ -65,9 +65,11 @@ workflows:
             - jira
             - slack-new-webhooks
       - aws-ecr/build-and-push-image:
+          context:
+            - ecs-deploys
           requires:
             - test
-          repo: '${AWS_ECR_REPO_NAME}'
+          repo: thebiggive-claimbot
           region: AWS_REGION
           tag: 'regression,regression-${CIRCLE_SHA1}'
           post-steps:
@@ -91,9 +93,11 @@ workflows:
             - jira
             - slack-new-webhooks
       - aws-ecr/build-and-push-image:
+          context:
+            - ecs-deploys
           requires:
             - test
-          repo: '${AWS_ECR_REPO_NAME}'
+          repo: thebiggive-claimbot
           region: AWS_REGION
           tag: 'staging,staging-${CIRCLE_SHA1}'
           post-steps:
@@ -118,9 +122,11 @@ workflows:
             - jira
             - slack-new-webhooks
       - aws-ecr/build-and-push-image:
+          context:
+            - ecs-deploys
           requires:
             - test
-          repo: '${AWS_ECR_REPO_NAME}'
+          repo: thebiggive-claimbot
           region: AWS_REGION
           tag: 'production,production-${CIRCLE_SHA1}'
           post-steps:
