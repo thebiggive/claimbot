@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ClaimBot\Monolog\Handler;
 
 use Aws\CloudWatchLogs\CloudWatchLogsClient;
+use ClaimBot\Monolog\Processor\JustTransactionIdProcessor;
 use Maxbanton\Cwh\Handler\CloudWatch;
 use Monolog\Handler\GroupHandler;
 use Monolog\Handler\StreamHandler;
@@ -21,6 +22,9 @@ class ClaimBotHandler extends GroupHandler
         $streamHandler = new StreamHandler($loggerSettings['path'], $loggerSettings['level']);
         $streamHandler->pushProcessor(new PsrLogMessageProcessor());
 
+        $govTalkRequestResponseStreamHandler = new StreamHandler($loggerSettings['path'], $loggerSettings['level']);
+        $govTalkRequestResponseStreamHandler->pushProcessor(new JustTransactionIdProcessor());
+
         $awsRegion = $loggerSettings['cloudwatch']['region'];
         $groupName = "tbg-$environment-$awsRegion-claimbot";
 
@@ -30,7 +34,8 @@ class ClaimBotHandler extends GroupHandler
         $baseResponseHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_responses', $retentionDays);
 
         $handlers = [
-            $streamHandler,
+            new GeneralMessageHandlerWrapper($streamHandler), // Exclude full request + response messages.
+            new GovTalkRequestResponseHandlerWrapper($govTalkRequestResponseStreamHandler),
             new RequestMessageHandlerWrapper($baseRequestHandler),
             new ResponseMessageHandlerWrapper($baseResponseHandler)
         ];

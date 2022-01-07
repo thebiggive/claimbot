@@ -36,6 +36,8 @@ class ClaimableDonationHandler implements BatchHandlerInterface, MessageHandlerI
 
     public function __invoke(Donation $message, Acknowledger $ack = null)
     {
+        $this->logger->info(sprintf('Received message for Donation ID %s', $message->id));
+
         return $this->handle($message, $ack);
     }
 
