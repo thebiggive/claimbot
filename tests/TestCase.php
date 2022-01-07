@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace ClaimBot\Tests;
 
-use ClaimBot\Messenger\Donation;
 use DI\Container;
 use DI\ContainerBuilder;
+use Messages\Donation;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Log\LoggerInterface;

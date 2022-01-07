@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Aws\CloudWatchLogs\CloudWatchLogsClient;
 use ClaimBot\Claimer;
-use ClaimBot\Messenger\Donation;
 use ClaimBot\Messenger\Handler\ClaimableDonationHandler;
 use ClaimBot\Messenger\OutboundMessageBus;
 use ClaimBot\Messenger\Transport\FailuresTransportInterface;
@@ -12,6 +11,7 @@ use ClaimBot\Monolog\Handler\ClaimBotHandler;
 use DI\Container;
 use DI\ContainerBuilder;
 use GovTalk\GiftAid\GiftAid;
+use Messages\Donation;
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
 use Psr\Container\ContainerInterface;
@@ -132,6 +132,9 @@ return function (ContainerBuilder $containerBuilder) {
 
         RoutableMessageBus::class => static function (ContainerInterface $c): RoutableMessageBus {
             $busContainer = new Container();
+            // Inbound
+            $busContainer->set('claimbot.donation.claim', $c->get(MessageBusInterface::class));
+            // Outbound
             $busContainer->set('claimbot.donation.error', $c->get(OutboundMessageBus::class));
 
             return new RoutableMessageBus($busContainer);

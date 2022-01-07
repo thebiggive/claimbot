@@ -7,10 +7,10 @@ namespace ClaimBot;
 use ClaimBot\Exception\DonationDataErrorsException;
 use ClaimBot\Exception\HMRCRejectionException;
 use ClaimBot\Exception\UnexpectedResponseException;
-use ClaimBot\Messenger\Donation;
 use DateTime;
 use GovTalk\GiftAid\ClaimingOrganisation;
 use GovTalk\GiftAid\GiftAid;
+use Messages\Donation;
 use Psr\Log\LoggerInterface;
 
 class Claimer

@@ -7,21 +7,22 @@ namespace ClaimBot\Messenger\Handler;
 use ClaimBot\Claimer;
 use ClaimBot\Exception\ClaimException;
 use ClaimBot\Exception\DonationDataErrorsException;
-use ClaimBot\Messenger\Donation;
 use ClaimBot\Messenger\OutboundMessageBus;
+use Messages\Donation;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Handler\Acknowledger;
 use Symfony\Component\Messenger\Handler\BatchHandlerInterface;
 use Symfony\Component\Messenger\Handler\BatchHandlerTrait;
+use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 use Symfony\Component\Messenger\Stamp\BusNameStamp;
 use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 
 /**
  * @link https://symfony.com/blog/new-in-symfony-5-4-messenger-improvements#handle-messages-in-batches
  */
-class ClaimableDonationHandler implements BatchHandlerInterface
+class ClaimableDonationHandler implements BatchHandlerInterface, MessageHandlerInterface
 {
     use BatchHandlerTrait;
 
