@@ -59,8 +59,15 @@ class ClaimableDonationHandler implements BatchHandlerInterface, MessageHandlerI
             foreach ($acks as $ack) {
                 $ack->ack(true);
             }
+
+            $this->logger->info('Claim succeeded and all donation messages acknowledged');
         } catch (DonationDataErrorsException $donationDataErrorsException) {
             foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
+                $this->logger->notice(sprintf(
+                    'Claim failed with donation-specific errors; sending %s to failure queue',
+                    $donationId,
+                ));
+
                 $this->sendToErrorQueue($donations[$donationId]); // Let MatchBot record that there's an error.
 
                 $acks[$donationId]->ack(false); // Don't keep re-trying the claim – ack it to the original claim queue.
@@ -68,6 +75,9 @@ class ClaimableDonationHandler implements BatchHandlerInterface, MessageHandlerI
         } catch (ClaimException $exception) {
             // There is some other error – potentially an internal problem rather than one with donation data.
             // nack() all claim messages so they are enqueued for a retry on next run.
+
+            $this->logger->notice('Claim failed with general errors');
+
             foreach ($acks as $ack) {
                 $ack->nack($exception);
             }
