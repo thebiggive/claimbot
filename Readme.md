@@ -2,13 +2,36 @@
 
 Microservice for submitting Gift Aid claims
 
-## Run a claim command
+## Simulate claiming locally
 
-    docker-compose run --rm app composer run messenger:consume
+### Prepare MatchBot
+
+To do a realistic local run you should normally be running [MatchBot](https://github.com/thebiggive/matchbot)
+too and have it send some data to the queue.
+
+You might for example:
+
+* Put some eligible-for-claims donation data into your local/Docker database, manually
+  or with [the Donate frontend](https://github.com/thebiggive/donate-frontend).
+* Consider temporarily tweaking MatchBot's `DonationRepository::findReadyToClaimGiftAid()`
+  and/or ClaimBot's `$donationsPerClaim` whose default is in the constuctor args
+  for [`ClaimableDonationHandler`](./src/Messenger/Handler/ClaimableDonationHandler.php).
+
+### Publish messages
+
+In the **MatchBot** project folder:
+
+    docker-compose run --rm app composer run matchbot:claim-gift-aid
+
+### Consume messages
+
+In the **ClaimBot** project folder:
+
+    docker-compose run --rm consumer
 
 ## Run unit tests
 
-    docker-compose run --rm app composer run test
+    docker-compose run --rm consumer composer run test
 
 ## What the consumer does
 
