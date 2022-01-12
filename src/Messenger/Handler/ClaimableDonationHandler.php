@@ -8,6 +8,7 @@ use ClaimBot\Claimer;
 use ClaimBot\Exception\ClaimException;
 use ClaimBot\Exception\DonationDataErrorsException;
 use ClaimBot\Messenger\OutboundMessageBus;
+use ClaimBot\Settings\SettingsInterface;
 use Messages\Donation;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Envelope;
@@ -26,12 +27,19 @@ class ClaimableDonationHandler implements BatchHandlerInterface, MessageHandlerI
 {
     use BatchHandlerTrait;
 
+    /**
+     * @var int Set once based on SQS message count or fallback maximum batch size, at initial run time. No need to
+     *          re-check on every {@see ClaimableDonationHandler::shouldFlush()} check.
+     */
+    private int $batchSize;
+
     public function __construct(
         private Claimer $claimer,
         private LoggerInterface $logger,
         private OutboundMessageBus $bus,
-        private int $donationsPerClaim = 50,
+        SettingsInterface $settings,
     ) {
+        $this->batchSize = $settings->get('current_batch_size');
     }
 
     public function __invoke(Donation $message, Acknowledger $ack = null)
@@ -70,7 +78,8 @@ class ClaimableDonationHandler implements BatchHandlerInterface, MessageHandlerI
 
                 $this->sendToErrorQueue($donations[$donationId]); // Let MatchBot record that there's an error.
 
-                $acks[$donationId]->ack(false); // Don't keep re-trying the claim – ack it to the original claim queue.
+                // Don't keep re-trying the donation – ack it to the inbound ClaimBot queue.
+                $acks[$donationId]->ack(false);
             }
         } catch (ClaimException $exception) {
             // There is some other error – potentially an internal problem rather than one with donation data.
@@ -108,6 +117,6 @@ class ClaimableDonationHandler implements BatchHandlerInterface, MessageHandlerI
 
     private function shouldFlush(): bool
     {
-        return $this->donationsPerClaim <= \count($this->jobs);
+        return $this->batchSize <= \count($this->jobs);
     }
 }

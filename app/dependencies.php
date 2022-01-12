@@ -8,6 +8,7 @@ use ClaimBot\Messenger\Handler\ClaimableDonationHandler;
 use ClaimBot\Messenger\OutboundMessageBus;
 use ClaimBot\Messenger\Transport\FailuresTransportInterface;
 use ClaimBot\Monolog\Handler\ClaimBotHandler;
+use ClaimBot\Settings\SettingsInterface;
 use DI\Container;
 use DI\ContainerBuilder;
 use GovTalk\GiftAid\GiftAid;
@@ -36,7 +37,7 @@ return function (ContainerBuilder $containerBuilder) {
         },
 
         CloudWatchLogsClient::class => function (ContainerInterface $c): CloudWatchLogsClient {
-            $cloudwatchSettings = $c->get('settings')['logger']['cloudwatch'];
+            $cloudwatchSettings = $c->get(SettingsInterface::class)->get('logger')['cloudwatch'];
             return new CloudWatchLogsClient([
                 'region' => $cloudwatchSettings['region'],
                 'version' => 'latest',
@@ -57,8 +58,8 @@ return function (ContainerBuilder $containerBuilder) {
                 getenv('MAIN_GATEWAY_SENDER_PASSWORD'),
                 getenv('VENDOR_ID'),
                 'The Big Give ClaimBot',
-                $c->get('settings')['version'],
-                getenv('APP_ENV') !== 'production',
+                $c->get(SettingsInterface::class)->get('version'),
+                $c->get(SettingsInterface::class)->get('environment') !== 'production',
                 null,
                 // 'http://host.docker.internal:5665/LTS/LTSPostServlet' // Uncomment to use LTS rather than ETS.
             );
@@ -74,7 +75,7 @@ return function (ContainerBuilder $containerBuilder) {
                     'country' => 'United Kingdom',
                 ],
                 null,
-                'ClaimBot-' . $c->get('settings')['version'] . date('Y-m-d'),
+                'ClaimBot-' . $c->get(SettingsInterface::class)->get('version') . date('Y-m-d'),
             );
 
             // ETS returns an error if you set a GatewayTimestamp – can only use this for LTS.
@@ -87,9 +88,7 @@ return function (ContainerBuilder $containerBuilder) {
         },
 
         LoggerInterface::class => function (ContainerInterface $c) {
-            $settings = $c->get('settings');
-
-            $loggerSettings = $settings['logger'];
+            $loggerSettings = $c->get(SettingsInterface::class)->get('logger');
             $logger = new Logger($loggerSettings['name']);
 
             $processor = new UidProcessor();
@@ -98,7 +97,7 @@ return function (ContainerBuilder $containerBuilder) {
             $handler = new ClaimBotHandler(
                 $c->get(CloudWatchLogsClient::class),
                 $loggerSettings,
-                $c->get('settings')['environment'],
+                $c->get(SettingsInterface::class)->get('environment'),
             );
             $logger->pushHandler($handler);
 
