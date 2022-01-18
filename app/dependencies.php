@@ -71,7 +71,12 @@ return function (ContainerBuilder $containerBuilder) {
                 getenv('HMRC_AGENT_NO'),
                 getenv('HMRC_AGENT_NAME'),
                 [
-                    'line' => explode(',', getenv('HMRC_AGENT_ADDRESS')),
+                    'line' => explode(
+                        ',',
+                        // Passing literal spaces in the S3 secret loader in a way that doesn't break with xargs
+                        // + export was super involved, so we just pass and replace literal '\s' for now.
+                        str_replace('\\s', ' ', getenv('HMRC_AGENT_ADDRESS')),
+                    ),
                     'country' => 'United Kingdom',
                 ],
                 null,
