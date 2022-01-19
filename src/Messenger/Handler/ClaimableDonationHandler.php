@@ -117,6 +117,12 @@ class ClaimableDonationHandler implements BatchHandlerInterface, MessageHandlerI
 
     private function shouldFlush(): bool
     {
+        $this->logger->debug(sprintf(
+            "Checking whether to flush with %d batch size and %d jobs",
+            $this->batchSize,
+            \count($this->jobs),
+        ));
+
         return $this->batchSize <= \count($this->jobs);
     }
 }

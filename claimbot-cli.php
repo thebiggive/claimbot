@@ -23,6 +23,8 @@ $messengerReceiverLocator = new Container();
 $transport = $psr11App->get(TransportInterface::class);
 $messengerReceiverLocator->set($messengerReceiverKey, $transport);
 
+$logger = $psr11App->get(LoggerInterface::class);
+
 // Allow fewer than 50 messages to be sent in a claim when using SQS, e.g. in Staging
 // or Production.
 /** @var Settings $settings */
@@ -32,7 +34,12 @@ if ($transport instanceof AmazonSqsTransport) {
     $sqsPending = $transport->getMessageCount();
     if ($sqsPending > 0 && $sqsPending < $settings->get('max_batch_size')) {
         $settings->setCurrentBatchSize($sqsPending);
+        $logger->debug(sprintf('Set batch size to reduced current queue backlog %d', $sqsPending));
+    } else {
+        $logger->debug(sprintf('Did not modify current batch size as %d SQS messages pending', $sqsPending));
     }
+} else {
+    $logger->debug(sprintf('Did not modify current batch size as transport is %s', get_class($transport)));
 }
 $psr11App->set(SettingsInterface::class, $settings);
 
