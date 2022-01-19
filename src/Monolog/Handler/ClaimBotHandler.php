@@ -30,8 +30,11 @@ class ClaimBotHandler extends GroupHandler
 
         $retentionDays = 366 * 7; // Keep all claim logs for the full duration HMRC might want info from us.
 
-        $baseRequestHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_requests', $retentionDays);
-        $baseResponseHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_responses', $retentionDays);
+        // Down from default 10k. Call `close()` on the logger to ensure anything left in the current batch is sent.
+        $batchSize = 10;
+
+        $baseRequestHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_requests', $retentionDays, $batchSize);
+        $baseResponseHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_responses', $retentionDays, $batchSize);
 
         $handlers = [
             new GeneralMessageHandlerWrapper($streamHandler), // Exclude full request + response messages.

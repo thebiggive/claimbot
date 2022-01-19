@@ -53,3 +53,10 @@ $command = new ConsumeMessagesCommand(
 
 $cliApp->add($command);
 $cliApp->run();
+
+/**
+ * This is essential to ensure that handlers in {@see \ClaimBot\Monolog\Handler\ClaimBotHandler} which batch their
+ * logs, e.g. the CloudWatch ones which define a special log stream (rather than going via `StreamHandler` and stdout),
+ * send all pending logs at the end of a command run.
+ */
+$logger->close();
