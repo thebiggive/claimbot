@@ -16,14 +16,13 @@ use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Handler\Acknowledger;
 use Symfony\Component\Messenger\Handler\BatchHandlerInterface;
 use Symfony\Component\Messenger\Handler\BatchHandlerTrait;
-use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 use Symfony\Component\Messenger\Stamp\BusNameStamp;
 use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 
 /**
  * @link https://symfony.com/blog/new-in-symfony-5-4-messenger-improvements#handle-messages-in-batches
  */
-class ClaimableDonationHandler implements BatchHandlerInterface, MessageHandlerInterface
+class ClaimableDonationHandler implements BatchHandlerInterface
 {
     use BatchHandlerTrait;
 
@@ -83,7 +82,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface, MessageHandlerI
             }
         } catch (ClaimException $exception) {
             // There is some other error – potentially an internal problem rather than one with donation data.
-            // nack() all claim messages so they are enqueued for a retry on next run.
+            // nack() all claim messages.
 
             $this->logger->notice('Claim failed with general errors');
 
