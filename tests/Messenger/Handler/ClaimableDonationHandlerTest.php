@@ -9,6 +9,7 @@ use ClaimBot\Exception\DonationDataErrorsException;
 use ClaimBot\Exception\UnexpectedResponseException;
 use ClaimBot\Messenger\Handler\ClaimableDonationHandler;
 use ClaimBot\Messenger\OutboundMessageBus;
+use ClaimBot\Settings\SettingsInterface;
 use ClaimBot\Tests\TestCase;
 use Prophecy\Argument;
 use Psr\Log\LoggerInterface;
@@ -39,14 +40,20 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledgerProphecy->ack(true)->shouldBeCalledTimes(2);
         $acknowledger = $acknowledgerProphecy->reveal();
 
+        $settingsProphecy = $this->prophesize(SettingsInterface::class);
+        $settingsProphecy->get('current_batch_size')
+            ->shouldBeCalledOnce()
+            ->willReturn(2); // Just 2 messages per run for this test, so we get messages ack'd right away in 1 claim.
+
         $container = $this->getContainer();
         $container->set(Claimer::class, $claimerProphecy->reveal());
+        $container->set(SettingsInterface::class, $settingsProphecy->reveal());
 
         $handler = new ClaimableDonationHandler(
             $container->get(Claimer::class),
             $container->get(LoggerInterface::class),
             $container->get(OutboundMessageBus::class),
-            2, // Just 2 messages per run for this test, so we get messages ack'd right away in 1 claim.
+            $container->get(SettingsInterface::class),
         );
 
         // These return "The number of pending messages in the batch if $ack is not null".
@@ -91,15 +98,21 @@ class ClaimableDonationHandlerTest extends TestCase
             ->shouldBeCalledOnce()
             ->willReturn($failMessageEnvelope);
 
+        $settingsProphecy = $this->prophesize(SettingsInterface::class);
+        $settingsProphecy->get('current_batch_size')
+            ->shouldBeCalledOnce()
+            ->willReturn(1); // Send claim after just 1 message.
+
         $container = $this->getContainer();
         $container->set(Claimer::class, $claimerProphecy->reveal());
         $container->set(OutboundMessageBus::class, $outboundBusProphecy->reveal());
+        $container->set(SettingsInterface::class, $settingsProphecy->reveal());
 
         $handler = new ClaimableDonationHandler(
             $container->get(Claimer::class),
             $container->get(LoggerInterface::class),
             $container->get(OutboundMessageBus::class),
-            1, // Send claim after just 1 message.
+            $container->get(SettingsInterface::class),
         );
 
         // These return "The number of pending messages in the batch if $ack is not null".
@@ -148,15 +161,21 @@ class ClaimableDonationHandlerTest extends TestCase
             // When this happens we log an error but still ack() the donation to the original queue.
             ->willThrow($transportException);
 
+        $settingsProphecy = $this->prophesize(SettingsInterface::class);
+        $settingsProphecy->get('current_batch_size')
+            ->shouldBeCalledOnce()
+            ->willReturn(1); // Send claim after just 1 message.
+
         $container = $this->getContainer();
         $container->set(Claimer::class, $claimerProphecy->reveal());
         $container->set(OutboundMessageBus::class, $outboundBusProphecy->reveal());
+        $container->set(SettingsInterface::class, $settingsProphecy->reveal());
 
         $handler = new ClaimableDonationHandler(
             $container->get(Claimer::class),
             $container->get(LoggerInterface::class),
             $container->get(OutboundMessageBus::class),
-            1, // Send claim after just 1 message.
+            $container->get(SettingsInterface::class),
         );
 
         // These return "The number of pending messages in the batch if $ack is not null".
@@ -173,14 +192,20 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledgerProphecy->nack(Argument::type(UnexpectedResponseException::class))->shouldBeCalledOnce();
         $acknowledger = $acknowledgerProphecy->reveal();
 
+        $settingsProphecy = $this->prophesize(SettingsInterface::class);
+        $settingsProphecy->get('current_batch_size')
+            ->shouldBeCalledOnce()
+            ->willReturn(1); // Send claim after just 1 message.
+
         $container = $this->getContainer();
         $container->set(Claimer::class, $claimerProphecy->reveal());
+        $container->set(SettingsInterface::class, $settingsProphecy->reveal());
 
         $handler = new ClaimableDonationHandler(
             $container->get(Claimer::class),
             $container->get(LoggerInterface::class),
             $container->get(OutboundMessageBus::class),
-            1, // Send claim after just 1 message.
+            $container->get(SettingsInterface::class),
         );
 
         // These return "The number of pending messages in the batch if $ack is not null".

@@ -75,6 +75,18 @@ class ClaimBotHandlerTest extends TestCase
                 'datetime' => new DateTimeImmutable(true),
             ]),
         );
+
+        // context from php-govtalk
+        $this->handler->handle([
+            'message' => 'Original message to be disregarded',
+            'level' => Logger::INFO,
+            'context' => [
+                'direction' => 'request',
+                'transactionId' => 'test123TxnId',
+            ],
+            'extra' => [],
+            'datetime' => new DateTimeImmutable(true),
+        ]);
     }
 
     public function testBatchHandle(): void

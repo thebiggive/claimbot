@@ -7,8 +7,9 @@ namespace ClaimBot\Messenger\Handler;
 use ClaimBot\Claimer;
 use ClaimBot\Exception\ClaimException;
 use ClaimBot\Exception\DonationDataErrorsException;
-use ClaimBot\Messenger\Donation;
 use ClaimBot\Messenger\OutboundMessageBus;
+use ClaimBot\Settings\SettingsInterface;
+use Messages\Donation;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
@@ -25,16 +26,25 @@ class ClaimableDonationHandler implements BatchHandlerInterface
 {
     use BatchHandlerTrait;
 
+    /**
+     * @var int Set once based on SQS message count or fallback maximum batch size, at initial run time. No need to
+     *          re-check on every {@see ClaimableDonationHandler::shouldFlush()} check.
+     */
+    private int $batchSize;
+
     public function __construct(
         private Claimer $claimer,
         private LoggerInterface $logger,
         private OutboundMessageBus $bus,
-        private int $donationsPerClaim = 50,
+        SettingsInterface $settings,
     ) {
+        $this->batchSize = $settings->get('current_batch_size');
     }
 
     public function __invoke(Donation $message, Acknowledger $ack = null)
     {
+        $this->logger->info(sprintf('Received message for Donation ID %s', $message->id));
+
         return $this->handle($message, $ack);
     }
 
@@ -56,15 +66,26 @@ class ClaimableDonationHandler implements BatchHandlerInterface
             foreach ($acks as $ack) {
                 $ack->ack(true);
             }
+
+            $this->logger->info('Claim succeeded and all donation messages acknowledged');
         } catch (DonationDataErrorsException $donationDataErrorsException) {
             foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
+                $this->logger->notice(sprintf(
+                    'Claim failed with donation-specific errors; sending %s to failure queue',
+                    $donationId,
+                ));
+
                 $this->sendToErrorQueue($donations[$donationId]); // Let MatchBot record that there's an error.
 
-                $acks[$donationId]->ack(false); // Don't keep re-trying the claim – ack it to the original claim queue.
+                // Don't keep re-trying the donation – ack it to the inbound ClaimBot queue.
+                $acks[$donationId]->ack(false);
             }
         } catch (ClaimException $exception) {
             // There is some other error – potentially an internal problem rather than one with donation data.
-            // nack() all claim messages so they are enqueued for a retry on next run.
+            // nack() all claim messages.
+
+            $this->logger->notice('Claim failed with general errors');
+
             foreach ($acks as $ack) {
                 $ack->nack($exception);
             }
@@ -95,6 +116,12 @@ class ClaimableDonationHandler implements BatchHandlerInterface
 
     private function shouldFlush(): bool
     {
-        return $this->donationsPerClaim <= \count($this->jobs);
+        $this->logger->debug(sprintf(
+            "Checking whether to flush with %d batch size and %d jobs",
+            $this->batchSize,
+            \count($this->jobs),
+        ));
+
+        return $this->batchSize <= \count($this->jobs);
     }
 }

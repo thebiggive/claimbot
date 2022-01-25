@@ -15,7 +15,8 @@
         "symfony/event-dispatcher": "^6.0",
         "symfony/messenger": "^6.0",
         "symfony/redis-messenger": "^6.0",
-        "thebiggive/hmrc-gift-aid": "^1.0.0-beta9"
+        "thebiggive/hmrc-gift-aid": "^1.0.0-beta9",
+        "thebiggive/messages": "^1.0"
     },
     "require-dev": {
         "phpspec/prophecy-phpunit": "^2.0",
@@ -40,7 +41,7 @@
     "scripts": {
         "messenger:consume": [
             "Composer\\Config::disableProcessTimeout",
-            "php claimbot-cli.php messenger:consume -vv --time-limit=600"
+            "php claimbot-cli.php messenger:consume -vvvv --time-limit=600"
         ],
         "lint:check": "phpcs --standard=phpcs.xml -s .",
         "lint:fix": "phpcbf --standard=phpcs.xml -s .",

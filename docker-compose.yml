@@ -5,14 +5,24 @@ volumes:
     driver: local
 
 services:
-  app:
+  consumer:
     image: thebiggive/php:8.0
+    command: composer run messenger:consume
     volumes:
       - .:/var/www/html
     env_file:
       - .env
-    depends_on:
-      - redis
+    networks:
+      - matchbot_matchbot
+# Redis is defined in MatchBot. Uncomment this and `redis` service if you need to run ClaimBot standalone.
+#    depends_on:
+#      - redis
 
-  redis:
-    image: redis:5.0
+#  redis:
+#    image: redis:5.0
+#    networks:
+#      - matchbot
+
+networks:
+  matchbot_matchbot:
+    external: true
