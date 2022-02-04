@@ -90,6 +90,11 @@ class ClaimableDonationHandler implements BatchHandlerInterface
 
             try {
                 $this->claimer->claim($donationsToRetry);
+
+                // Success – for the remainder!
+                foreach ($donationsToRetry as $donationId => $donation) {
+                    $acks[$donationId]->ack(true);
+                }
             } catch (ClaimException $retryException) {
                 $this->logger->error('Re-tried claim failed too. No more error detection.');
 
