@@ -15,13 +15,16 @@ use Psr\Log\LoggerInterface;
 
 class Claimer
 {
+    /** @var array Assoc on donation ID. Populated on errors so remaining donations can be accessed for retries. */
+    private array $remainingValidDonations = [];
+
     public function __construct(private GiftAid $giftAid, private LoggerInterface $logger)
     {
     }
 
     /**
-     * @param Donation[] $donations
-     * @return bool True if the submission succeeded.
+     * @param Donation[] $donations         Associactive, keyed on donation ID
+     * @return bool                         True if the submission succeeded.
      * @throws DonationDataErrorsException  if at least one donation-specific error was returned
      * @throws HMRCRejectionException       if there is otherwise a specific XML format error from HMRC
      * @throws UnexpectedResponseException  if there was no successful correlation ID but neither of the above error
@@ -44,6 +47,7 @@ class Claimer
                     $donation->org_name,
                     $donation->org_hmrc_ref,
                 ));
+                $orgHMRCRefsAdded[] = $donation->org_hmrc_ref;
             }
 
             if ($claimToDate === null || new \DateTime($donation->donation_date) > $claimToDate) {
@@ -62,6 +66,9 @@ class Claimer
             return true;
         }
 
+        // Copy (unmodified) assoc array with a new name to clarify its use in the rest of the method.
+        $this->remainingValidDonations = $donations;
+
         if (empty($claimOutcome['errors'])) {
             $this->logger->error('Neither correlation ID nor errors. Is the endpoint valid?');
 
@@ -77,9 +84,11 @@ class Claimer
         $failedDonationErrors = [];
         // Make a copy so we can remove donation-particular errors just from this var.
         $nonDonationMappedErrors = $claimOutcome['errors'];
+
         if (!empty($claimOutcome['errors']['business'])) {
             foreach ($claimOutcome['errors']['business'] as $key => $error) {
                 if (!empty($error['donation_id'])) {
+                    unset($this->remainingValidDonations[$error['donation_id']]);
                     $failedDonationErrors[$error['donation_id']] = $error;
                     $this->logger->error(sprintf(
                         'Donation ID %s error at %s: %s',
@@ -110,5 +119,13 @@ class Claimer
         $exception->setRawHMRCErrors($claimOutcome['errors']);
 
         throw $exception;
+    }
+
+    /**
+     * @return Donation[]   Associative, keyed on donation ID.
+     */
+    public function getRemainingValidDonations(): array
+    {
+        return $this->remainingValidDonations;
     }
 }

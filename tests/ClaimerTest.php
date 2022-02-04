@@ -36,7 +36,9 @@ class ClaimerTest extends TestCase
             new NullLogger(),
         );
 
-        $claimResult = $claimer->claim([$this->getTestDonation()]);
+        $claimResult = $claimer->claim([$this->getTestDonation()->id => $this->getTestDonation()]);
+
+        $this->assertCount(0, $claimer->getRemainingValidDonations());
         $this->assertTrue($claimResult);
     }
 
@@ -72,7 +74,15 @@ class ClaimerTest extends TestCase
             new NullLogger(),
         );
 
-        $claimer->claim([$this->getTestDonation()]);
+        $donation2 = clone $this->getTestDonation();
+        $donation2->id = 'efgh-5678';
+
+        $claimer->claim([
+            $this->getTestDonation()->id => $this->getTestDonation(),
+            'efgh-5678' => $donation2,
+        ]);
+
+        $this->assertCount(1, $claimer->getRemainingValidDonations());
     }
 
     public function testGeneralFatalError(): void
@@ -108,7 +118,7 @@ class ClaimerTest extends TestCase
             new NullLogger(),
         );
 
-        $claimer->claim([$this->getTestDonation()]);
+        $claimer->claim([$this->getTestDonation()->id => $this->getTestDonation()]);
     }
 
     public function testGeneralOtherErrors(): void
@@ -141,7 +151,7 @@ class ClaimerTest extends TestCase
             new NullLogger(),
         );
 
-        $claimer->claim([$this->getTestDonation()]);
+        $claimer->claim([$this->getTestDonation()->id => $this->getTestDonation()]);
     }
 
     public function testNoCorrelationIdOrErrors(): void
@@ -164,6 +174,6 @@ class ClaimerTest extends TestCase
             new NullLogger(),
         );
 
-        $claimer->claim([$this->getTestDonation()]);
+        $claimer->claim([$this->getTestDonation()->id => $this->getTestDonation()]);
     }
 }
