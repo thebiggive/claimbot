@@ -66,7 +66,6 @@ class Claimer
             return true;
         }
 
-        // Copy (unmodified) assoc array with a new name to clarify its use in the rest of the method.
         $this->remainingValidDonations = $donations;
 
         if (empty($claimOutcome['errors'])) {
