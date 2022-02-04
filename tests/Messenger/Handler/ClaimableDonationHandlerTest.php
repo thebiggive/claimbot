@@ -78,7 +78,12 @@ class ClaimableDonationHandlerTest extends TestCase
 
         $donation = $this->getTestDonation();
         $claimerProphecy = $this->prophesize(Claimer::class);
-        $claimerProphecy->claim(['abcd-1234' => $donation])->willThrow($dataException);
+        $claimerProphecy->claim(['abcd-1234' => $donation])
+            ->shouldBeCalledOnce()
+            ->willThrow($dataException);
+        $claimerProphecy->getRemainingValidDonations()
+            ->shouldBeCalledOnce()
+            ->willReturn([]);
 
         $acknowledgerProphecy = $this->prophesize(Acknowledger::class);
         // "Don't keep re-trying the claim – ack it to the original claim queue." But return value is false so this
@@ -119,6 +124,173 @@ class ClaimableDonationHandlerTest extends TestCase
         $this->assertEquals(0, $handler->__invoke($donation, $acknowledger));
     }
 
+    public function testDonationDataWithRetrySuccess(): void
+    {
+        $dataException = new DonationDataErrorsException(
+            [
+                'abcd-1234' => [
+                    'donation_id' => 'abcd-1234',
+                    'message' => "Invalid content found at element 'Sur'",
+                    'location' => '/hd:GovTalkMessage[1]/hd:Body[1]/r68:IRenvelope[1]/r68:R68[1]/' .
+                        'r68:Claim[1]/r68:Repayment[1]/r68:GAD[1]/r68:Donor[1]/r68:Sur[1]',
+                ],
+            ],
+            // Specific error string not used here and is tested specifically in DonationDataErrorsExceptionTest.
+            'Array [...]',
+        );
+
+        $donation1 = $this->getTestDonation();
+        $donation2 = clone $donation1;
+        $donation2->id = 'efgh-5678';
+        $claimerProphecy = $this->prophesize(Claimer::class);
+
+        // First claim for 2x donations gives a single donation error.
+        $claimerProphecy->claim(['abcd-1234' => $donation1, 'efgh-5678' => $donation2])
+            ->shouldBeCalledOnce()
+            ->willThrow($dataException);
+
+        $claimerProphecy->getRemainingValidDonations()
+            ->shouldBeCalledOnce()
+            ->willReturn(['efgh-5678' => $donation2]);
+
+        // Second claim for the remaining donation gives a general error.
+        $claimerProphecy->claim(['efgh-5678' => $donation2])
+            ->shouldBeCalledOnce()
+            ->willReturn(true);
+
+        $acknowledger1Prophecy = $this->prophesize(Acknowledger::class);
+        // "Don't keep re-trying the claim – ack it to the original claim queue." But return value is false so this
+        // is distinguisable in the expected call from a 'processed' ack.
+        $acknowledger1Prophecy->ack(false)->shouldBeCalledOnce();
+        $acknowledger1 = $acknowledger1Prophecy->reveal();
+
+        $acknowledger2Prophecy = $this->prophesize(Acknowledger::class);
+        $acknowledger2Prophecy->ack(true)
+            ->shouldBeCalledOnce();
+        $acknowledger2 = $acknowledger2Prophecy->reveal();
+
+        $failMessageStamps1 = [
+            new BusNameStamp('claimbot.donation.error'),
+            new TransportMessageIdStamp('claimbot.donation.error.abcd-1234'),
+        ];
+        $failMessageEnvelope = new Envelope($donation1, $failMessageStamps1);
+
+        $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
+        // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
+        $outboundBusProphecy->dispatch($failMessageEnvelope)
+            ->shouldBeCalledOnce()
+            ->willReturn($failMessageEnvelope);
+
+        $settingsProphecy = $this->prophesize(SettingsInterface::class);
+        $settingsProphecy->get('current_batch_size')
+            ->shouldBeCalledOnce()
+            ->willReturn(2);
+
+        $container = $this->getContainer();
+        $container->set(Claimer::class, $claimerProphecy->reveal());
+        $container->set(OutboundMessageBus::class, $outboundBusProphecy->reveal());
+        $container->set(SettingsInterface::class, $settingsProphecy->reveal());
+
+        $handler = new ClaimableDonationHandler(
+            $container->get(Claimer::class),
+            $container->get(LoggerInterface::class),
+            $container->get(OutboundMessageBus::class),
+            $container->get(SettingsInterface::class),
+        );
+
+        // These return "The number of pending messages in the batch if $ack is not null".
+        $this->assertEquals(1, $handler->__invoke($donation1, $acknowledger1));
+        $this->assertEquals(0, $handler->__invoke($donation2, $acknowledger2));
+    }
+
+    public function testDonationDataWithRetryFollowedByGeneralError(): void
+    {
+        $dataException = new DonationDataErrorsException(
+            [
+                'abcd-1234' => [
+                    'donation_id' => 'abcd-1234',
+                    'message' => "Invalid content found at element 'Sur'",
+                    'location' => '/hd:GovTalkMessage[1]/hd:Body[1]/r68:IRenvelope[1]/r68:R68[1]/' .
+                        'r68:Claim[1]/r68:Repayment[1]/r68:GAD[1]/r68:Donor[1]/r68:Sur[1]',
+                ],
+            ],
+            // Specific error string not used here and is tested specifically in DonationDataErrorsExceptionTest.
+            'Array [...]',
+        );
+
+        $donation1 = $this->getTestDonation();
+        $donation2 = clone $donation1;
+        $donation2->id = 'efgh-5678';
+        $claimerProphecy = $this->prophesize(Claimer::class);
+
+        // First claim for 2x donations gives a single donation error.
+        $claimerProphecy->claim(['abcd-1234' => $donation1, 'efgh-5678' => $donation2])
+            ->shouldBeCalledOnce()
+            ->willThrow($dataException);
+
+        $claimerProphecy->getRemainingValidDonations()
+            ->shouldBeCalledOnce()
+            ->willReturn(['efgh-5678' => $donation2]);
+
+        // Second claim for the remaining donation gives a general error.
+        $claimerProphecy->claim(['efgh-5678' => $donation2])
+            ->shouldBeCalledOnce()
+            ->willThrow(UnexpectedResponseException::class);
+
+        $acknowledger1Prophecy = $this->prophesize(Acknowledger::class);
+        // "Don't keep re-trying the claim – ack it to the original claim queue." But return value is false so this
+        // is distinguisable in the expected call from a 'processed' ack.
+        $acknowledger1Prophecy->ack(false)->shouldBeCalledOnce();
+        $acknowledger1 = $acknowledger1Prophecy->reveal();
+
+        $acknowledger2Prophecy = $this->prophesize(Acknowledger::class);
+        $acknowledger2Prophecy->nack(Argument::type(UnexpectedResponseException::class))
+            ->shouldBeCalledOnce();
+        $acknowledger2 = $acknowledger2Prophecy->reveal();
+
+        $failMessageStamps1 = [
+            new BusNameStamp('claimbot.donation.error'),
+            new TransportMessageIdStamp('claimbot.donation.error.abcd-1234'),
+        ];
+        $failMessageEnvelope = new Envelope($donation1, $failMessageStamps1);
+
+        $failMessageStamps2 = [
+            new BusNameStamp('claimbot.donation.error'),
+            new TransportMessageIdStamp('claimbot.donation.error.efgh-5678'),
+        ];
+        $failMessageEnvelope2 = new Envelope($donation2, $failMessageStamps2);
+
+        $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
+        // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
+        $outboundBusProphecy->dispatch($failMessageEnvelope)
+            ->shouldBeCalledOnce()
+            ->willReturn($failMessageEnvelope);
+        $outboundBusProphecy->dispatch($failMessageEnvelope2)
+            ->shouldBeCalledOnce()
+            ->willReturn($failMessageEnvelope2);
+
+        $settingsProphecy = $this->prophesize(SettingsInterface::class);
+        $settingsProphecy->get('current_batch_size')
+            ->shouldBeCalledOnce()
+            ->willReturn(2);
+
+        $container = $this->getContainer();
+        $container->set(Claimer::class, $claimerProphecy->reveal());
+        $container->set(OutboundMessageBus::class, $outboundBusProphecy->reveal());
+        $container->set(SettingsInterface::class, $settingsProphecy->reveal());
+
+        $handler = new ClaimableDonationHandler(
+            $container->get(Claimer::class),
+            $container->get(LoggerInterface::class),
+            $container->get(OutboundMessageBus::class),
+            $container->get(SettingsInterface::class),
+        );
+
+        // These return "The number of pending messages in the batch if $ack is not null".
+        $this->assertEquals(1, $handler->__invoke($donation1, $acknowledger1));
+        $this->assertEquals(0, $handler->__invoke($donation2, $acknowledger2));
+    }
+
     public function testDonationDataErrorAndFailureQueueDispatchError(): void
     {
         $dataException = new DonationDataErrorsException(
@@ -137,6 +309,9 @@ class ClaimableDonationHandlerTest extends TestCase
         $donation = $this->getTestDonation();
         $claimerProphecy = $this->prophesize(Claimer::class);
         $claimerProphecy->claim(['abcd-1234' => $donation])->willThrow($dataException);
+        $claimerProphecy->getRemainingValidDonations()
+            ->shouldBeCalledOnce()
+            ->willReturn([]);
 
         $acknowledgerProphecy = $this->prophesize(Acknowledger::class);
         // "Don't keep re-trying the claim – ack it to the original claim queue." But return value is false so this
