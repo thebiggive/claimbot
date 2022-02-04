@@ -67,7 +67,10 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                 $ack->ack(true);
             }
 
-            $this->logger->info('Claim succeeded and all donation messages acknowledged');
+            $this->logger->info(sprintf(
+                'Claim succeeded and all %d donation messages acknowledged',
+                count($donations),
+            ));
         } catch (DonationDataErrorsException $donationDataErrorsException) {
             foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
                 $this->logger->notice(sprintf(
@@ -79,6 +82,37 @@ class ClaimableDonationHandler implements BatchHandlerInterface
 
                 // Don't keep re-trying the donation – ack it to the inbound ClaimBot queue.
                 $acks[$donationId]->ack(false);
+            }
+
+            $donationsToRetry = $this->claimer->getRemainingValidDonations();
+            if (count($donationsToRetry) === 0) {
+                return;
+            }
+
+            $this->logger->info(sprintf('Retrying %d remaining donations without errors...', count($donationsToRetry)));
+
+            try {
+                $this->claimer->claim($donationsToRetry);
+
+                // Success – for the remainder!
+                foreach ($donationsToRetry as $donationId => $donation) {
+                    $acks[$donationId]->ack(true);
+                }
+
+                $this->logger->info(sprintf(
+                    'Re-tried claim succeeded and %d donation messages acknowledged',
+                    count($donationsToRetry),
+                ));
+            } catch (ClaimException $retryException) {
+                $this->logger->error('Re-tried claim failed too. No more error detection.');
+
+                foreach ($donationsToRetry as $donationId => $donation) {
+                    // Something unexpected is going on – probably most helpful to send all impacted
+                    // donations to the error queue so they can be easily investigated in MatchBot
+                    // DB.
+                    $this->sendToErrorQueue($donation);
+                    $acks[$donationId]->nack($retryException);
+                }
             }
         } catch (ClaimException $exception) {
             // There is some other error – potentially an internal problem rather than one with donation data.
