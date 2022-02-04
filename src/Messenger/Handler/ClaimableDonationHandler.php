@@ -67,7 +67,10 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                 $ack->ack(true);
             }
 
-            $this->logger->info('Claim succeeded and all donation messages acknowledged');
+            $this->logger->info(sprintf(
+                'Claim succeeded and all %d donation messages acknowledged',
+                count($donations),
+            ));
         } catch (DonationDataErrorsException $donationDataErrorsException) {
             foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
                 $this->logger->notice(sprintf(
@@ -95,6 +98,11 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                 foreach ($donationsToRetry as $donationId => $donation) {
                     $acks[$donationId]->ack(true);
                 }
+
+                $this->logger->info(sprintf(
+                    'Re-tried claim succeeded and %d donation messages acknowledged',
+                    count($donationsToRetry),
+                ));
             } catch (ClaimException $retryException) {
                 $this->logger->error('Re-tried claim failed too. No more error detection.');
 
