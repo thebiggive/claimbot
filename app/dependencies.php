@@ -80,7 +80,7 @@ return function (ContainerBuilder $containerBuilder) {
                     'country' => 'United Kingdom',
                 ],
                 null,
-                'ClaimBot-' . $c->get(SettingsInterface::class)->get('version') . date('Y-m-d'),
+                'ClaimBot-' . $c->get(SettingsInterface::class)->get('version') . '-' . date('Y-m-d'),
             );
 
             // ETS returns an error if you set a GatewayTimestamp – can only use this for LTS.
