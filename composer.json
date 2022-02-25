@@ -2,7 +2,7 @@
     "name": "thebiggive/claimbot",
     "description": "Gift Aid claim runner",
     "type": "project",
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
         "php": "^8.0.2",
@@ -15,7 +15,7 @@
         "symfony/event-dispatcher": "^6.0",
         "symfony/messenger": "^6.0",
         "symfony/redis-messenger": "^6.0",
-        "thebiggive/hmrc-gift-aid": "^1.0.0-beta9",
+        "thebiggive/hmrc-gift-aid": "^1.0.0",
         "thebiggive/messages": "^1.0"
     },
     "require-dev": {
