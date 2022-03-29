@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ClaimBot\Tests\Messenger\Handler;
 
+use Brick\Postcode\PostcodeFormatter;
 use ClaimBot\Claimer;
 use ClaimBot\Exception\DonationDataErrorsException;
 use ClaimBot\Exception\UnexpectedResponseException;
@@ -11,6 +12,7 @@ use ClaimBot\Messenger\Handler\ClaimableDonationHandler;
 use ClaimBot\Messenger\OutboundMessageBus;
 use ClaimBot\Settings\SettingsInterface;
 use ClaimBot\Tests\TestCase;
+use Messages\Donation;
 use Prophecy\Argument;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Envelope;
@@ -21,7 +23,7 @@ use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 
 class ClaimableDonationHandlerTest extends TestCase
 {
-    public function testHandlerSuccess(): void
+    public function testSuccess(): void
     {
         $donationA = $this->getTestDonation();
         $donationB = clone $donationA;
@@ -53,6 +55,68 @@ class ClaimableDonationHandlerTest extends TestCase
             $container->get(Claimer::class),
             $container->get(LoggerInterface::class),
             $container->get(OutboundMessageBus::class),
+            $container->get(PostcodeFormatter::class),
+            $container->get(SettingsInterface::class),
+        );
+
+        // These return "The number of pending messages in the batch if $ack is not null".
+        $this->assertEquals(1, $handler->__invoke($donationA, $acknowledger));
+        $this->assertEquals(0, $handler->__invoke($donationB, $acknowledger));
+    }
+
+    /**
+     * ClaimBot handler itself picking up on an invalid postcode format and deciding not to send to HMRC at all.
+     */
+    public function testPostcodeValidationError(): void
+    {
+        $donationA = $this->getTestDonation();
+
+        // Donation B has an invalid postcode for the GB foramtter.
+        $donationB = clone $donationA;
+        $donationB->id = 'efgh-5678';
+        $donationB->org_hmrc_ref = 'CD12346';
+        $donationB->postcode = 'N1AA';
+
+        $donationsFull = [
+            'abcd-1234' => $donationA,
+            'efgh-5678' => $donationB,
+        ];
+
+        $arrayWithJustValidDonation = [
+            'abcd-1234' => $donationA,
+        ];
+
+        $claimerProphecy = $this->prophesize(Claimer::class);
+        $claimerProphecy->claim($donationsFull)->shouldNotBeCalled();
+        $claimerProphecy->claim($arrayWithJustValidDonation)->shouldBeCalledOnce()->willReturn(true);
+
+        $acknowledgerProphecy = $this->prophesize(Acknowledger::class);
+        $acknowledgerProphecy->ack(true)->shouldBeCalledOnce(); // true ack for $donationA
+        $acknowledgerProphecy->ack(false)->shouldBeCalledOnce(); // false ack (but don't retry) for $donationB
+        $acknowledger = $acknowledgerProphecy->reveal();
+
+        $failMessageEnvelope = $this->getFailMessageEnvelope($donationB);
+        $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
+        // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
+        $outboundBusProphecy->dispatch($failMessageEnvelope)
+            ->shouldBeCalledOnce()
+            ->willReturn($failMessageEnvelope);
+
+        $settingsProphecy = $this->prophesize(SettingsInterface::class);
+        $settingsProphecy->get('current_batch_size')
+            ->shouldBeCalledOnce()
+            ->willReturn(2); // Just 2 messages per run for this test, so we get messages ack'd right away in 1 claim.
+
+        $container = $this->getContainer();
+        $container->set(Claimer::class, $claimerProphecy->reveal());
+        $container->set(OutboundMessageBus::class, $outboundBusProphecy->reveal());
+        $container->set(SettingsInterface::class, $settingsProphecy->reveal());
+
+        $handler = new ClaimableDonationHandler(
+            $container->get(Claimer::class),
+            $container->get(LoggerInterface::class),
+            $container->get(OutboundMessageBus::class),
+            $container->get(PostcodeFormatter::class),
             $container->get(SettingsInterface::class),
         );
 
@@ -91,12 +155,7 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledgerProphecy->ack(false)->shouldBeCalledOnce();
         $acknowledger = $acknowledgerProphecy->reveal();
 
-        $failMessageStamps = [
-            new BusNameStamp('claimbot.donation.error'),
-            new TransportMessageIdStamp('claimbot.donation.error.abcd-1234'),
-        ];
-        $failMessageEnvelope = new Envelope($donation, $failMessageStamps);
-
+        $failMessageEnvelope = $this->getFailMessageEnvelope($donation);
         $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
         // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
         $outboundBusProphecy->dispatch($failMessageEnvelope)
@@ -117,6 +176,7 @@ class ClaimableDonationHandlerTest extends TestCase
             $container->get(Claimer::class),
             $container->get(LoggerInterface::class),
             $container->get(OutboundMessageBus::class),
+            $container->get(PostcodeFormatter::class),
             $container->get(SettingsInterface::class),
         );
 
@@ -169,12 +229,7 @@ class ClaimableDonationHandlerTest extends TestCase
             ->shouldBeCalledOnce();
         $acknowledger2 = $acknowledger2Prophecy->reveal();
 
-        $failMessageStamps1 = [
-            new BusNameStamp('claimbot.donation.error'),
-            new TransportMessageIdStamp('claimbot.donation.error.abcd-1234'),
-        ];
-        $failMessageEnvelope = new Envelope($donation1, $failMessageStamps1);
-
+        $failMessageEnvelope = $this->getFailMessageEnvelope($donation1);
         $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
         // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
         $outboundBusProphecy->dispatch($failMessageEnvelope)
@@ -195,6 +250,7 @@ class ClaimableDonationHandlerTest extends TestCase
             $container->get(Claimer::class),
             $container->get(LoggerInterface::class),
             $container->get(OutboundMessageBus::class),
+            $container->get(PostcodeFormatter::class),
             $container->get(SettingsInterface::class),
         );
 
@@ -248,23 +304,13 @@ class ClaimableDonationHandlerTest extends TestCase
             ->shouldBeCalledOnce();
         $acknowledger2 = $acknowledger2Prophecy->reveal();
 
-        $failMessageStamps1 = [
-            new BusNameStamp('claimbot.donation.error'),
-            new TransportMessageIdStamp('claimbot.donation.error.abcd-1234'),
-        ];
-        $failMessageEnvelope = new Envelope($donation1, $failMessageStamps1);
-
-        $failMessageStamps2 = [
-            new BusNameStamp('claimbot.donation.error'),
-            new TransportMessageIdStamp('claimbot.donation.error.efgh-5678'),
-        ];
-        $failMessageEnvelope2 = new Envelope($donation2, $failMessageStamps2);
-
+        $failMessageEnvelope1 = $this->getFailMessageEnvelope($donation1);
+        $failMessageEnvelope2 = $this->getFailMessageEnvelope($donation2);
         $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
         // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
-        $outboundBusProphecy->dispatch($failMessageEnvelope)
+        $outboundBusProphecy->dispatch($failMessageEnvelope1)
             ->shouldBeCalledOnce()
-            ->willReturn($failMessageEnvelope);
+            ->willReturn($failMessageEnvelope1);
         $outboundBusProphecy->dispatch($failMessageEnvelope2)
             ->shouldBeCalledOnce()
             ->willReturn($failMessageEnvelope2);
@@ -283,6 +329,7 @@ class ClaimableDonationHandlerTest extends TestCase
             $container->get(Claimer::class),
             $container->get(LoggerInterface::class),
             $container->get(OutboundMessageBus::class),
+            $container->get(PostcodeFormatter::class),
             $container->get(SettingsInterface::class),
         );
 
@@ -321,14 +368,8 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledgerProphecy->ack(false)->shouldBeCalledOnce();
         $acknowledger = $acknowledgerProphecy->reveal();
 
-        $failMessageStamps = [
-            new BusNameStamp('claimbot.donation.error'),
-            new TransportMessageIdStamp('claimbot.donation.error.abcd-1234'),
-        ];
-        $failMessageEnvelope = new Envelope($donation, $failMessageStamps);
-
+        $failMessageEnvelope = $this->getFailMessageEnvelope($donation);
         $transportException = new TransportException('Failure queue fell over');
-
         $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
         // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
         $outboundBusProphecy->dispatch($failMessageEnvelope)
@@ -350,6 +391,7 @@ class ClaimableDonationHandlerTest extends TestCase
             $container->get(Claimer::class),
             $container->get(LoggerInterface::class),
             $container->get(OutboundMessageBus::class),
+            $container->get(PostcodeFormatter::class),
             $container->get(SettingsInterface::class),
         );
 
@@ -380,10 +422,21 @@ class ClaimableDonationHandlerTest extends TestCase
             $container->get(Claimer::class),
             $container->get(LoggerInterface::class),
             $container->get(OutboundMessageBus::class),
+            $container->get(PostcodeFormatter::class),
             $container->get(SettingsInterface::class),
         );
 
         // These return "The number of pending messages in the batch if $ack is not null".
         $this->assertEquals(0, $handler->__invoke($donation, $acknowledger));
+    }
+
+    private function getFailMessageEnvelope(Donation $donation): Envelope
+    {
+        $failMessageStamps = [
+            new BusNameStamp('claimbot.donation.error'),
+            new TransportMessageIdStamp("claimbot.donation.error.{$donation->id}"),
+        ];
+
+        return new Envelope($donation, $failMessageStamps);
     }
 }
