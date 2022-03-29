@@ -3,5 +3,6 @@ vendor/
 
 var/cache/**
 .phpunit.result.cache
+coverage.xml
 
 .idea/

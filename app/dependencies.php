@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Aws\CloudWatchLogs\CloudWatchLogsClient;
+use Brick\Postcode\PostcodeFormatter;
 use ClaimBot\Claimer;
 use ClaimBot\Messenger\Handler\ClaimableDonationHandler;
 use ClaimBot\Messenger\OutboundMessageBus;
@@ -133,6 +134,10 @@ return function (ContainerBuilder $containerBuilder) {
                     $c,
                 )),
             ]);
+        },
+
+        PostcodeFormatter::class => static function (ContainerInterface $c): PostcodeFormatter {
+            return new PostcodeFormatter();
         },
 
         RoutableMessageBus::class => static function (ContainerInterface $c): RoutableMessageBus {

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace ClaimBot\Messenger\Handler;
 
+use Brick\Postcode\InvalidPostcodeException;
+use Brick\Postcode\PostcodeFormatter;
 use ClaimBot\Claimer;
 use ClaimBot\Exception\ClaimException;
 use ClaimBot\Exception\DonationDataErrorsException;
@@ -36,6 +38,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         private Claimer $claimer,
         private LoggerInterface $logger,
         private OutboundMessageBus $bus,
+        private PostcodeFormatter $postcodeFormatter,
         SettingsInterface $settings,
     ) {
         $this->batchSize = $settings->get('current_batch_size');
@@ -54,9 +57,27 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         $acks = [];
         $donations = [];
 
-        foreach ($jobs as [$message, $ack]) {
-            $acks[$message->id] = $ack;
-            $donations[$message->id] = $message;
+        foreach ($jobs as [$donation, $ack]) {
+            $acks[$donation->id] = $ack;
+
+            try {
+                $formattedDonation = $this->format($donation);
+
+                // Only reached if `format()` didn't throw an exception – if it did the batch for HMRC excludes this
+                // donation and we continue the `foreach` loop.
+                $donations[$donation->id] = $formattedDonation;
+            } catch (InvalidPostcodeException $exception) {
+                $this->logger->error(sprintf(
+                    'Could not reformat invalid postcode %s; sending %s to failure queue and not to HMRC.',
+                    $donation->postcode,
+                    $donation->id // e.g. Donation UUID.
+                ));
+                $this->sendToErrorQueue($donation); // Let MatchBot record that there's an error.
+
+                // Don't keep re-trying the donation – ack it to the inbound ClaimBot queue.
+                $acks[$donation->id]->ack(false);
+                unset($acks[$donation->id]);
+            }
         }
 
         try {
@@ -68,8 +89,8 @@ class ClaimableDonationHandler implements BatchHandlerInterface
             }
 
             $this->logger->info(sprintf(
-                'Claim succeeded and all %d donation messages acknowledged',
-                count($donations),
+                'Claim succeeded and %d donation messages acknowledged',
+                count($donations), // Note that count is the # sent to HMRC, not necessarily the number we started with
             ));
         } catch (DonationDataErrorsException $donationDataErrorsException) {
             foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
@@ -157,5 +178,23 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         ));
 
         return $this->batchSize <= \count($this->jobs);
+    }
+
+    /**
+     * @param Donation $donation
+     * @return Donation
+     * @throws InvalidPostcodeException if postcode is just in the wrong format and can't be tidied according to the
+     *                                  Brick lib.
+     */
+    private function format(Donation $donation): Donation
+    {
+        if (!empty($donation->postcode)) {
+            // MatchBot sets postcode to blank string if the donor has said they're overseas in the context of
+            // the Gift Aid / home address input. HMRC does not expect/allow any zip when we say the donor lives
+            // outside the UK.
+            $donation->postcode = (new PostcodeFormatter())->format('GB', $donation->postcode);
+        }
+
+        return $donation;
     }
 }
