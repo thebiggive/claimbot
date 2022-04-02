@@ -75,10 +75,6 @@ class Claimer
             $this->logger->info(sprintf('Claim acknowledged. Correlation ID %s', $this->lastCorrelationId));
 
             $pollDetails = $this->giftAid->getResponseEndpoint();
-            if (!$pollDetails) {
-                return true; // Not expected, but skip trying to poll if we can't.
-            }
-
             $pollUrl = $pollDetails['endpoint'];
             $pollInterval = (int) $pollDetails['interval'];
 

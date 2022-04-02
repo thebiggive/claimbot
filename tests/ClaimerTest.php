@@ -15,7 +15,6 @@ use Psr\Log\NullLogger;
 
 class ClaimerTest extends TestCase
 {
-    // todo test new getters in semi-isolation
     public function testClaimSuccessIncludingPoll(): void
     {
         $giftAidProphecy = $this->prophesize(GiftAid::class);
@@ -133,8 +132,6 @@ class ClaimerTest extends TestCase
             $this->getTestDonation()->id => $this->getTestDonation(),
             'efgh-5678' => $donation2,
         ]);
-
-        $this->assertCount(1, $claimer->getRemainingValidDonations());
     }
 
     public function testGeneralFatalError(): void
