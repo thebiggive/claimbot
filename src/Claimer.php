@@ -18,6 +18,15 @@ class Claimer
     /** @var array Assoc on donation ID. Populated on errors so remaining donations can be accessed for retries. */
     private array $remainingValidDonations = [];
 
+    private ?string $lastCorrelationId = null;
+
+    private ?string $lastResponseMessage = null;
+
+    /**
+     * @var string[]    Keyed on donation ID.
+     */
+    private array $donationErrorMessages = [];
+
     public function __construct(private GiftAid $giftAid, private LoggerInterface $logger)
     {
     }
@@ -61,9 +70,19 @@ class Claimer
         $claimOutcome = $this->giftAid->giftAidSubmit($plainArrayDonations);
 
         if (!empty($claimOutcome['correlationid'])) {
-            $this->logger->info(sprintf('Claim succeeded. Correlation ID %s', $claimOutcome['correlationid']));
+            $this->lastCorrelationId = $claimOutcome['correlationid'];
 
-            return true;
+            $this->logger->info(sprintf('Claim acknowledged. Correlation ID %s', $this->lastCorrelationId));
+
+            $pollDetails = $this->giftAid->getResponseEndpoint();
+            if (!$pollDetails) {
+                return true; // Not expected, but skip trying to poll if we can't.
+            }
+
+            $pollUrl = $pollDetails['endpoint'];
+            $pollInterval = (int) $pollDetails['interval'];
+
+            return $this->pollForResponse($this->lastCorrelationId, $pollUrl, $pollInterval);
         }
 
         $this->remainingValidDonations = $donations;
@@ -74,7 +93,78 @@ class Claimer
             throw new UnexpectedResponseException('Response had neither correlation ID nor errors');
         }
 
-        // $response['errors'] is a 3D array:
+        $this->handleErrors($claimOutcome['errors']);
+    }
+
+    /**
+     * @return Donation[]   Associative, keyed on donation ID.
+     */
+    public function getRemainingValidDonations(): array
+    {
+        return $this->remainingValidDonations;
+    }
+
+    public function getLastCorrelationId(): ?string
+    {
+        return $this->lastCorrelationId;
+    }
+
+    public function getLastResponseMessage(): ?string
+    {
+        return $this->lastResponseMessage;
+    }
+
+    public function getDonationError(string $donationId): ?string
+    {
+        return $this->donationErrorMessages[$donationId] ?? null;
+    }
+
+    private function pollForResponse(string $correlationId, string $pollUrl, int $pollInterval = 1): bool
+    {
+        $maxSecondsToPoll = 45;
+        $startTime = microtime(true);
+        $pollInterval = max($pollInterval, 1); // Always 1+ seconds between iterations.
+
+        while ((microtime(true) - $startTime) < $maxSecondsToPoll) { // And while nothing has `return`ed.
+            sleep($pollInterval);
+            $this->logger->info(sprintf(
+                'Sending poll request to %s for correlation ID %s',
+                $pollUrl,
+                $correlationId
+            ));
+            $claimOutcome = $this->giftAid->declarationResponsePoll($correlationId, $pollUrl);
+            $gotResponse = $this->giftAid->getResponseQualifier() === 'response';
+
+            if (!$gotResponse) {
+                $this->logger->debug(sprintf(
+                    'No response yet (%s), looping...',
+                    $this->giftAid->getResponseQualifier(),
+                ));
+
+                $this->logger->debug($this->giftAid->getFullXMLResponse());
+
+                continue;
+            }
+
+            if (!empty($claimOutcome['errors'])) {
+                $this->handleErrors($claimOutcome['errors']);
+            } else {
+                $this->lastResponseMessage = json_encode(
+                    $claimOutcome['submission_response']['message'] ?? [],
+                    JSON_THROW_ON_ERROR,
+                );
+            }
+
+            return true;
+        }
+
+        $this->logger->error(sprintf('No poll response after %d seconds', $maxSecondsToPoll));
+        return false;
+    }
+
+    private function handleErrors(array $errors): void
+    {
+        // $claimOutcome['errors'] – passed in here as $errors – is a 3D array:
         // top level keys: 'fatal', 'recoverable', 'business', 'warning'.
         // 2nd level when 'business' errors encountered was numeric-indexed starting at 1.
         // 3rd level inside 'business' error items had keys 'number', 'text' and 'location' – where 'text' was
@@ -82,19 +172,21 @@ class Claimer
 
         $failedDonationErrors = [];
         // Make a copy so we can remove donation-particular errors just from this var.
-        $nonDonationMappedErrors = $claimOutcome['errors'];
+        $nonDonationMappedErrors = $errors;
 
-        if (!empty($claimOutcome['errors']['business'])) {
-            foreach ($claimOutcome['errors']['business'] as $key => $error) {
+        if (!empty($errors['business'])) {
+            foreach ($errors['business'] as $key => $error) {
                 if (!empty($error['donation_id'])) {
                     unset($this->remainingValidDonations[$error['donation_id']]);
                     $failedDonationErrors[$error['donation_id']] = $error;
                     $this->logger->error(sprintf(
-                        'Donation ID %s error at %s: %s',
+                        'Donation ID %s error at %s: %s – %s',
                         $error['donation_id'],
                         $error['location'],
+                        $error['message'],
                         $error['text'],
                     ));
+                    $this->donationErrorMessages[$error['donation_id']] = $error['message'];
                     unset($nonDonationMappedErrors['business'][$key]);
                 }
             }
@@ -109,22 +201,14 @@ class Claimer
 
         if (!empty($failedDonationErrors)) {
             $exception = new DonationDataErrorsException($failedDonationErrors);
-        } elseif (!empty($claimOutcome['errors']['fatal'])) {
-            $exception = new HMRCRejectionException('Fatal: ' . $claimOutcome['errors']['fatal'][0]['text']);
+        } elseif (!empty($errors['fatal'])) {
+            $exception = new HMRCRejectionException('Fatal: ' . $errors['fatal'][0]['text']);
         } else {
             $exception = new HMRCRejectionException('HMRC submission errors');
         }
 
-        $exception->setRawHMRCErrors($claimOutcome['errors']);
+        $exception->setRawHMRCErrors($errors);
 
         throw $exception;
-    }
-
-    /**
-     * @return Donation[]   Associative, keyed on donation ID.
-     */
-    public function getRemainingValidDonations(): array
-    {
-        return $this->remainingValidDonations;
     }
 }

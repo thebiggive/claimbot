@@ -58,6 +58,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         $donations = [];
 
         foreach ($jobs as [$donation, $ack]) {
+            /** @var Donation $donation */
             $acks[$donation->id] = $ack;
 
             try {
@@ -72,24 +73,24 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                     $donation->postcode,
                     $donation->id // e.g. Donation UUID.
                 ));
-                $this->sendToErrorQueue($donation); // Let MatchBot record that there's an error.
+                // Let MatchBot record that there's an error. Note that in this failed validation
+                // case we set responseSuccess false even though there is no correlation ID,
+                // because we know it's likely not worth sending this bad data to HMRC.
+                $donation->responseSuccess = false;
+                $this->sendToResultQueue($donation);
 
                 // Don't keep re-trying the donation – ack it to the inbound ClaimBot queue.
                 $acks[$donation->id]->ack(false);
-                unset($acks[$donation->id]);
+                unset($acks[$donation->id]); // $donations never has the badly formatted donation added.
             }
         }
 
         try {
             $this->claimer->claim($donations);
-
-            // Success!
-            foreach ($acks as $ack) {
-                $ack->ack(true);
-            }
+            $this->markSuccessful($donations, $acks);
 
             $this->logger->info(sprintf(
-                'Claim succeeded and %d donation messages acknowledged',
+                'Claim sent and %d donation messages acknowledged',
                 count($donations), // Note that count is the # sent to HMRC, not necessarily the number we started with
             ));
         } catch (DonationDataErrorsException $donationDataErrorsException) {
@@ -99,10 +100,14 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                     $donationId,
                 ));
 
-                $this->sendToErrorQueue($donations[$donationId]); // Let MatchBot record that there's an error.
+                $donations[$donationId]->responseSuccess = false;
+                $donations[$donationId]->responseDetail = $this->claimer->getDonationError($donationId);
+                $donations[$donationId]->submissionCorrelationId = $this->claimer->getLastCorrelationId();
+                $this->sendToResultQueue($donations[$donationId]); // Let MatchBot record that there's an error.
 
                 // Don't keep re-trying the donation – ack it to the inbound ClaimBot queue.
                 $acks[$donationId]->ack(false);
+                unset($acks[$donationId]);
             }
 
             $donationsToRetry = $this->claimer->getRemainingValidDonations();
@@ -116,9 +121,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                 $this->claimer->claim($donationsToRetry);
 
                 // Success – for the remainder!
-                foreach ($donationsToRetry as $donationId => $donation) {
-                    $acks[$donationId]->ack(true);
-                }
+                $this->markSuccessful($donationsToRetry, $acks);
 
                 $this->logger->info(sprintf(
                     'Re-tried claim succeeded and %d donation messages acknowledged',
@@ -131,7 +134,8 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                     // Something unexpected is going on – probably most helpful to send all impacted
                     // donations to the error queue so they can be easily investigated in MatchBot
                     // DB.
-                    $this->sendToErrorQueue($donation);
+                    $donation->responseSuccess = false;
+                    $this->sendToResultQueue($donation);
                     $acks[$donationId]->nack($retryException);
                 }
             }
@@ -147,18 +151,18 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         }
     }
 
-    private function sendToErrorQueue(Donation $donation): bool
+    private function sendToResultQueue(Donation $donation): bool
     {
         $stamps = [
-            new BusNameStamp('claimbot.donation.error'),
-            new TransportMessageIdStamp("claimbot.donation.error.{$donation->id}"),
+            new BusNameStamp('claimbot.donation.result'),
+            new TransportMessageIdStamp("claimbot.donation.result.{$donation->id}"),
         ];
 
         try {
             $this->bus->dispatch(new Envelope($donation, $stamps));
         } catch (TransportException $exception) {
             $this->logger->error(sprintf(
-                'claimbot.donation.error queue dispatch error %s. Donation ID %s.',
+                'claimbot.donation.result queue dispatch error %s. Donation ID %s.',
                 $exception->getMessage(),
                 $donation->id,
             ));
@@ -196,5 +200,26 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         }
 
         return $donation;
+    }
+
+    /**
+     * Sends success data to result queue, and positive ack's to original claims queue.
+     *
+     * @param array $donations      Keyed on donation ID
+     * @param array $acknowledgers  Keyed on donation ID
+     */
+    private function markSuccessful(array $donations, array $acknowledgers): void
+    {
+        $correlationId = $this->claimer->getLastCorrelationId();
+        $responseMessage = $this->claimer->getLastResponseMessage();
+
+        foreach ($donations as $donationId => $donation) {
+            $donation->submissionCorrelationId = $correlationId;
+            $donation->responseSuccess = true;
+            $donation->responseDetail = $responseMessage;
+            $this->sendToResultQueue($donation);
+
+            $acknowledgers[$donationId]->ack(true);
+        }
     }
 }

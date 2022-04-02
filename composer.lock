@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b7c6d9057be63716e722c8cab478b18d",
+    "content-hash": "dfa090b3b9e5f1512e44ef17ca33aa3c",
     "packages": [
         {
             "name": "async-aws/core",
@@ -183,16 +183,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.218.0",
+            "version": "3.218.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "714ed40bc2e60d4af907eb2d41fbfb75f980d2e2"
+                "reference": "fd902a4766d61afac98f7e7746736ba741d4dcce"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/714ed40bc2e60d4af907eb2d41fbfb75f980d2e2",
-                "reference": "714ed40bc2e60d4af907eb2d41fbfb75f980d2e2",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/fd902a4766d61afac98f7e7746736ba741d4dcce",
+                "reference": "fd902a4766d61afac98f7e7746736ba741d4dcce",
                 "shasum": ""
             },
             "require": {
@@ -268,9 +268,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.218.0"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.218.1"
             },
-            "time": "2022-03-31T18:20:58+00:00"
+            "time": "2022-04-01T18:14:25+00:00"
         },
         {
             "name": "brick/postcode",
@@ -1571,16 +1571,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v6.0.5",
+            "version": "v6.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "3bebf4108b9e07492a2a4057d207aa5a77d146b1"
+                "reference": "70dcf7b2ca2ea08ad6ebcc475f104a024fb5632e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/3bebf4108b9e07492a2a4057d207aa5a77d146b1",
-                "reference": "3bebf4108b9e07492a2a4057d207aa5a77d146b1",
+                "url": "https://api.github.com/repos/symfony/console/zipball/70dcf7b2ca2ea08ad6ebcc475f104a024fb5632e",
+                "reference": "70dcf7b2ca2ea08ad6ebcc475f104a024fb5632e",
                 "shasum": ""
             },
             "require": {
@@ -1646,7 +1646,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v6.0.5"
+                "source": "https://github.com/symfony/console/tree/v6.0.7"
             },
             "funding": [
                 {
@@ -1662,29 +1662,29 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-02-25T10:48:52+00:00"
+            "time": "2022-03-31T17:18:25+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v2.5.0",
+            "version": "v3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "6f981ee24cf69ee7ce9736146d1c57c2780598a8"
+                "reference": "c726b64c1ccfe2896cb7df2e1331c357ad1c8ced"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/6f981ee24cf69ee7ce9736146d1c57c2780598a8",
-                "reference": "6f981ee24cf69ee7ce9736146d1c57c2780598a8",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/c726b64c1ccfe2896cb7df2e1331c357ad1c8ced",
+                "reference": "c726b64c1ccfe2896cb7df2e1331c357ad1c8ced",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=8.0.2"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "2.5-dev"
+                    "dev-main": "3.0-dev"
                 },
                 "thanks": {
                     "name": "symfony/contracts",
@@ -1713,7 +1713,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v2.5.0"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.0.0"
             },
             "funding": [
                 {
@@ -1729,7 +1729,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-07-12T14:48:14+00:00"
+            "time": "2021-11-01T23:48:49+00:00"
         },
         {
             "name": "symfony/event-dispatcher",
@@ -1895,16 +1895,16 @@
         },
         {
             "name": "symfony/http-client",
-            "version": "v6.0.5",
+            "version": "v6.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "a8f87328930932c455cffd048f965d1223d91915"
+                "reference": "a7930c47248b9b57e9d0b8da100ffc1e031536dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/a8f87328930932c455cffd048f965d1223d91915",
-                "reference": "a8f87328930932c455cffd048f965d1223d91915",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/a7930c47248b9b57e9d0b8da100ffc1e031536dc",
+                "reference": "a7930c47248b9b57e9d0b8da100ffc1e031536dc",
                 "shasum": ""
             },
             "require": {
@@ -1959,7 +1959,7 @@
             "description": "Provides powerful methods to fetch HTTP resources synchronously or asynchronously",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v6.0.5"
+                "source": "https://github.com/symfony/http-client/tree/v6.0.7"
             },
             "funding": [
                 {
@@ -1975,7 +1975,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-02-27T08:47:28+00:00"
+            "time": "2022-04-01T12:27:43+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
@@ -2472,16 +2472,16 @@
         },
         {
             "name": "symfony/redis-messenger",
-            "version": "v6.0.6",
+            "version": "v6.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/redis-messenger.git",
-                "reference": "5ee384cb1d72ad4dcf9d9402bc0a39aa1e5c5207"
+                "reference": "1f58a8e0e5a37b9d66a38c0bdae24056d76a8bcc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/redis-messenger/zipball/5ee384cb1d72ad4dcf9d9402bc0a39aa1e5c5207",
-                "reference": "5ee384cb1d72ad4dcf9d9402bc0a39aa1e5c5207",
+                "url": "https://api.github.com/repos/symfony/redis-messenger/zipball/1f58a8e0e5a37b9d66a38c0bdae24056d76a8bcc",
+                "reference": "1f58a8e0e5a37b9d66a38c0bdae24056d76a8bcc",
                 "shasum": ""
             },
             "require": {
@@ -2519,7 +2519,7 @@
             "description": "Symfony Redis extension Messenger Bridge",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/redis-messenger/tree/v6.0.6"
+                "source": "https://github.com/symfony/redis-messenger/tree/v6.0.7"
             },
             "funding": [
                 {
@@ -2535,26 +2535,25 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-03-05T21:04:00+00:00"
+            "time": "2022-03-31T17:22:53+00:00"
         },
         {
             "name": "symfony/service-contracts",
-            "version": "v2.5.0",
+            "version": "v2.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/service-contracts.git",
-                "reference": "1ab11b933cd6bc5464b08e81e2c5b07dec58b0fc"
+                "reference": "d664541b99d6fb0247ec5ff32e87238582236204"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/1ab11b933cd6bc5464b08e81e2c5b07dec58b0fc",
-                "reference": "1ab11b933cd6bc5464b08e81e2c5b07dec58b0fc",
+                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/d664541b99d6fb0247ec5ff32e87238582236204",
+                "reference": "d664541b99d6fb0247ec5ff32e87238582236204",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
-                "psr/container": "^1.1",
-                "symfony/deprecation-contracts": "^2.1"
+                "psr/container": "^1.1"
             },
             "conflict": {
                 "ext-psr": "<1.1|>=2"
@@ -2565,7 +2564,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "2.5-dev"
+                    "dev-main": "2.4-dev"
                 },
                 "thanks": {
                     "name": "symfony/contracts",
@@ -2602,7 +2601,7 @@
                 "standards"
             ],
             "support": {
-                "source": "https://github.com/symfony/service-contracts/tree/v2.5.0"
+                "source": "https://github.com/symfony/service-contracts/tree/v2.4.1"
             },
             "funding": [
                 {
@@ -2618,7 +2617,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-11-04T16:48:04+00:00"
+            "time": "2021-11-04T16:37:19+00:00"
         },
         {
             "name": "symfony/string",
@@ -2707,16 +2706,16 @@
         },
         {
             "name": "thebiggive/hmrc-gift-aid",
-            "version": "v1.0.0",
+            "version": "v1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thebiggive/hmrc-gift-aid.git",
-                "reference": "56c30725e86102ddda54d4b8639ae0f4c751ee20"
+                "reference": "3f934b3e6656d34f6f8d27361a6ff5460916f391"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/56c30725e86102ddda54d4b8639ae0f4c751ee20",
-                "reference": "56c30725e86102ddda54d4b8639ae0f4c751ee20",
+                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/3f934b3e6656d34f6f8d27361a6ff5460916f391",
+                "reference": "3f934b3e6656d34f6f8d27361a6ff5460916f391",
                 "shasum": ""
             },
             "require": {
@@ -2725,12 +2724,12 @@
                 "ext-xmlwriter": "*",
                 "ext-zlib": "*",
                 "php": "^7.4 || ^8.0",
-                "thebiggive/php-govtalk": "^1.0.0"
+                "thebiggive/php-govtalk": "^1.0.1"
             },
             "require-dev": {
                 "phpspec/prophecy-phpunit": "^2.0",
                 "phpunit/phpunit": "^9.5.7",
-                "roave/security-advisories": "dev-master",
+                "roave/security-advisories": "dev-latest",
                 "squizlabs/php_codesniffer": "^3.6.0"
             },
             "type": "library",
@@ -2766,22 +2765,22 @@
             "description": "A library for charities and CASCs to claim Gift Aid (including Small Donations) from HMRC",
             "homepage": "https://github.com/thebiggive/hmrc-gift-aid",
             "support": {
-                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v1.0.0"
+                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v1.0.1"
             },
-            "time": "2022-02-25T17:12:59+00:00"
+            "time": "2022-04-02T09:35:39+00:00"
         },
         {
             "name": "thebiggive/messages",
-            "version": "v1.0.1",
+            "version": "v2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thebiggive/messages.git",
-                "reference": "b7207ead871d4cc0d7d328b4ec1744e4295d3e0a"
+                "reference": "5459200663ee16c305c8e1f5137651b5de0349f5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thebiggive/messages/zipball/b7207ead871d4cc0d7d328b4ec1744e4295d3e0a",
-                "reference": "b7207ead871d4cc0d7d328b4ec1744e4295d3e0a",
+                "url": "https://api.github.com/repos/thebiggive/messages/zipball/5459200663ee16c305c8e1f5137651b5de0349f5",
+                "reference": "5459200663ee16c305c8e1f5137651b5de0349f5",
                 "shasum": ""
             },
             "require": {
@@ -2806,9 +2805,9 @@
             "description": "Shared message / model classes for cross-service communication",
             "support": {
                 "issues": "https://github.com/thebiggive/messages/issues",
-                "source": "https://github.com/thebiggive/messages/tree/v1.0.1"
+                "source": "https://github.com/thebiggive/messages/tree/v2.0.0"
             },
-            "time": "2022-01-07T11:51:16+00:00"
+            "time": "2022-04-02T12:27:43+00:00"
         },
         {
             "name": "thebiggive/php-govtalk",
@@ -5480,5 +5479,5 @@
         "ext-redis": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.1.0"
 }

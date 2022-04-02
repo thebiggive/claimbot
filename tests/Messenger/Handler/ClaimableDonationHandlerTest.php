@@ -23,8 +23,9 @@ use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 
 class ClaimableDonationHandlerTest extends TestCase
 {
-    public function testSuccess(): void
+    public function testSuccessFollowedByPollSuccess(): void
     {
+        // todo test that result queue publish happens
         $donationA = $this->getTestDonation();
         $donationB = clone $donationA;
         $donationB->id = 'efgh-5678';
@@ -37,6 +38,8 @@ class ClaimableDonationHandlerTest extends TestCase
 
         $claimerProphecy = $this->prophesize(Claimer::class);
         $claimerProphecy->claim($donations)->shouldBeCalledOnce()->willReturn(true);
+        $claimerProphecy->getLastCorrelationId()->shouldBeCalledOnce()->willReturn('corrId');
+        $claimerProphecy->getLastResponseMessage()->shouldBeCalledOnce()->willReturn('all good');
 
         $acknowledgerProphecy = $this->prophesize(Acknowledger::class);
         $acknowledgerProphecy->ack(true)->shouldBeCalledTimes(2);
@@ -89,18 +92,33 @@ class ClaimableDonationHandlerTest extends TestCase
         $claimerProphecy = $this->prophesize(Claimer::class);
         $claimerProphecy->claim($donationsFull)->shouldNotBeCalled();
         $claimerProphecy->claim($arrayWithJustValidDonation)->shouldBeCalledOnce()->willReturn(true);
+        $claimerProphecy->getLastCorrelationId()->shouldBeCalledOnce()->willReturn('corrId');
+        $claimerProphecy->getLastResponseMessage()->shouldBeCalledOnce()->willReturn('all good with the remaining one');
 
         $acknowledgerProphecy = $this->prophesize(Acknowledger::class);
         $acknowledgerProphecy->ack(true)->shouldBeCalledOnce(); // true ack for $donationA
         $acknowledgerProphecy->ack(false)->shouldBeCalledOnce(); // false ack (but don't retry) for $donationB
         $acknowledger = $acknowledgerProphecy->reveal();
 
-        $failMessageEnvelope = $this->getFailMessageEnvelope($donationB);
+        $donationAWithOutcomeFieldsSet = clone $donationA;
+        $donationAWithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
+        $donationAWithOutcomeFieldsSet->responseSuccess = true;
+        $donationAWithOutcomeFieldsSet->responseDetail = 'all good with the remaining one';
+
+        $donationBWithOutcomeFieldsSet = clone $donationB;
+        $donationBWithOutcomeFieldsSet->responseSuccess = false;
+
+        $donationAEnvelope = $this->getResultMessageEnvelope($donationAWithOutcomeFieldsSet);
+        $donationBEnvelope = $this->getResultMessageEnvelope($donationBWithOutcomeFieldsSet);
+
         $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
         // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
-        $outboundBusProphecy->dispatch($failMessageEnvelope)
+        $outboundBusProphecy->dispatch($donationAEnvelope)
             ->shouldBeCalledOnce()
-            ->willReturn($failMessageEnvelope);
+            ->willReturn($donationAEnvelope);
+        $outboundBusProphecy->dispatch($donationBEnvelope)
+            ->shouldBeCalledOnce()
+            ->willReturn($donationBEnvelope);
 
         $settingsProphecy = $this->prophesize(SettingsInterface::class);
         $settingsProphecy->get('current_batch_size')
@@ -148,6 +166,9 @@ class ClaimableDonationHandlerTest extends TestCase
         $claimerProphecy->getRemainingValidDonations()
             ->shouldBeCalledOnce()
             ->willReturn([]);
+        $claimerProphecy->getLastCorrelationId()->shouldBeCalledOnce()->willReturn('corrId');
+        $claimerProphecy->getDonationError('abcd-1234')->shouldBeCalledOnce()
+            ->willReturn("Invalid content found at element 'Sur'");
 
         $acknowledgerProphecy = $this->prophesize(Acknowledger::class);
         // "Don't keep re-trying the claim – ack it to the original claim queue." But return value is false so this
@@ -155,7 +176,7 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledgerProphecy->ack(false)->shouldBeCalledOnce();
         $acknowledger = $acknowledgerProphecy->reveal();
 
-        $failMessageEnvelope = $this->getFailMessageEnvelope($donation);
+        $failMessageEnvelope = $this->getResultMessageEnvelope($donation);
         $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
         // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
         $outboundBusProphecy->dispatch($failMessageEnvelope)
@@ -218,6 +239,18 @@ class ClaimableDonationHandlerTest extends TestCase
             ->shouldBeCalledOnce()
             ->willReturn(true);
 
+        $claimerProphecy->getLastCorrelationId()
+            ->shouldBeCalledTimes(2) // Once for failure, once for success acks.
+            ->willReturn('corrId');
+
+        $claimerProphecy->getDonationError('abcd-1234')
+            ->shouldBeCalledOnce()
+            ->willReturn("Invalid content found at element 'Sur'");
+
+        $claimerProphecy->getLastResponseMessage()
+            ->shouldBeCalledOnce()
+            ->willReturn('all good with the remaining one');
+
         $acknowledger1Prophecy = $this->prophesize(Acknowledger::class);
         // "Don't keep re-trying the claim – ack it to the original claim queue." But return value is false so this
         // is distinguisable in the expected call from a 'processed' ack.
@@ -229,12 +262,27 @@ class ClaimableDonationHandlerTest extends TestCase
             ->shouldBeCalledOnce();
         $acknowledger2 = $acknowledger2Prophecy->reveal();
 
-        $failMessageEnvelope = $this->getFailMessageEnvelope($donation1);
+        $donation1WithOutcomeFieldsSet = clone $donation1;
+        $donation1WithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
+        $donation1WithOutcomeFieldsSet->responseSuccess = false;
+        $donation1WithOutcomeFieldsSet->responseDetail = "Invalid content found at element 'Sur'";
+
+        $donation2WithOutcomeFieldsSet = clone $donation2;
+        $donation2WithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
+        $donation2WithOutcomeFieldsSet->responseSuccess = true;
+        $donation2WithOutcomeFieldsSet->responseDetail = 'all good with the remaining one';
+
+        $donation1Envelope = $this->getResultMessageEnvelope($donation1WithOutcomeFieldsSet);
+        $donation2Envelope = $this->getResultMessageEnvelope($donation2WithOutcomeFieldsSet);
+
         $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
         // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
-        $outboundBusProphecy->dispatch($failMessageEnvelope)
+        $outboundBusProphecy->dispatch($donation1Envelope)
             ->shouldBeCalledOnce()
-            ->willReturn($failMessageEnvelope);
+            ->willReturn($donation1Envelope);
+        $outboundBusProphecy->dispatch($donation2Envelope)
+            ->shouldBeCalledOnce()
+            ->willReturn($donation2Envelope);
 
         $settingsProphecy = $this->prophesize(SettingsInterface::class);
         $settingsProphecy->get('current_batch_size')
@@ -293,6 +341,14 @@ class ClaimableDonationHandlerTest extends TestCase
             ->shouldBeCalledOnce()
             ->willThrow(UnexpectedResponseException::class);
 
+        $claimerProphecy->getLastCorrelationId()
+            ->shouldBeCalledOnce()
+            ->willReturn('corrId');
+
+        $claimerProphecy->getDonationError('abcd-1234')
+            ->shouldBeCalledOnce()
+            ->willReturn("Invalid content found at element 'Sur'");
+
         $acknowledger1Prophecy = $this->prophesize(Acknowledger::class);
         // "Don't keep re-trying the claim – ack it to the original claim queue." But return value is false so this
         // is distinguisable in the expected call from a 'processed' ack.
@@ -304,8 +360,8 @@ class ClaimableDonationHandlerTest extends TestCase
             ->shouldBeCalledOnce();
         $acknowledger2 = $acknowledger2Prophecy->reveal();
 
-        $failMessageEnvelope1 = $this->getFailMessageEnvelope($donation1);
-        $failMessageEnvelope2 = $this->getFailMessageEnvelope($donation2);
+        $failMessageEnvelope1 = $this->getResultMessageEnvelope($donation1);
+        $failMessageEnvelope2 = $this->getResultMessageEnvelope($donation2);
         $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
         // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
         $outboundBusProphecy->dispatch($failMessageEnvelope1)
@@ -359,6 +415,9 @@ class ClaimableDonationHandlerTest extends TestCase
         $claimerProphecy->getRemainingValidDonations()
             ->shouldBeCalledOnce()
             ->willReturn([]);
+        $claimerProphecy->getLastCorrelationId()->shouldBeCalledOnce()->willReturn('corrId');
+        $claimerProphecy->getDonationError('abcd-1234')->shouldBeCalledOnce()
+            ->willReturn("Invalid content found at element 'Sur'");
 
         $acknowledgerProphecy = $this->prophesize(Acknowledger::class);
         // "Don't keep re-trying the claim – ack it to the original claim queue." But return value is false so this
@@ -368,7 +427,7 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledgerProphecy->ack(false)->shouldBeCalledOnce();
         $acknowledger = $acknowledgerProphecy->reveal();
 
-        $failMessageEnvelope = $this->getFailMessageEnvelope($donation);
+        $failMessageEnvelope = $this->getResultMessageEnvelope($donation);
         $transportException = new TransportException('Failure queue fell over');
         $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
         // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
@@ -430,11 +489,11 @@ class ClaimableDonationHandlerTest extends TestCase
         $this->assertEquals(0, $handler->__invoke($donation, $acknowledger));
     }
 
-    private function getFailMessageEnvelope(Donation $donation): Envelope
+    private function getResultMessageEnvelope(Donation $donation): Envelope
     {
         $failMessageStamps = [
-            new BusNameStamp('claimbot.donation.error'),
-            new TransportMessageIdStamp("claimbot.donation.error.{$donation->id}"),
+            new BusNameStamp('claimbot.donation.result'),
+            new TransportMessageIdStamp("claimbot.donation.result.{$donation->id}"),
         ];
 
         return new Envelope($donation, $failMessageStamps);

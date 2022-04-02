@@ -7,7 +7,7 @@ use Brick\Postcode\PostcodeFormatter;
 use ClaimBot\Claimer;
 use ClaimBot\Messenger\Handler\ClaimableDonationHandler;
 use ClaimBot\Messenger\OutboundMessageBus;
-use ClaimBot\Messenger\Transport\FailuresTransportInterface;
+use ClaimBot\Messenger\Transport\OutboundTransportInterface;
 use ClaimBot\Monolog\Handler\ClaimBotHandler;
 use ClaimBot\Settings\SettingsInterface;
 use DI\Container;
@@ -129,7 +129,7 @@ return function (ContainerBuilder $containerBuilder) {
             return new OutboundMessageBus([
                 new SendMessageMiddleware(new SendersLocator(
                     [
-                        Donation::class => [FailuresTransportInterface::class], // Outbound -> donation error queue.
+                        Donation::class => [OutboundTransportInterface::class], // Outbound -> donation error queue.
                     ],
                     $c,
                 )),
@@ -145,19 +145,19 @@ return function (ContainerBuilder $containerBuilder) {
             // Inbound
             $busContainer->set('claimbot.donation.claim', $c->get(MessageBusInterface::class));
             // Outbound
-            $busContainer->set('claimbot.donation.error', $c->get(OutboundMessageBus::class));
+            $busContainer->set('claimbot.donation.result', $c->get(OutboundMessageBus::class));
 
             return new RoutableMessageBus($busContainer);
         },
 
-        // Outbound messages are all donation failures.
-        FailuresTransportInterface::class => static function (ContainerInterface $c): TransportInterface {
+        // Outbound messages are donation objects with claim outcome metadata.
+        OutboundTransportInterface::class => static function (ContainerInterface $c): TransportInterface {
             $transportFactory = new TransportFactory([
                 new AmazonSqsTransportFactory(),
                 new RedisTransportFactory(),
             ]);
             return $transportFactory->createTransport(
-                getenv('MESSENGER_FAILURE_QUEUE_TRANSPORT_DSN'),
+                getenv('MESSENGER_OUTBOUND_TRANSPORT_DSN'),
                 [],
                 new PhpSerializer(),
             );
