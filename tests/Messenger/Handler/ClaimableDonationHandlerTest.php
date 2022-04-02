@@ -428,7 +428,7 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledger = $acknowledgerProphecy->reveal();
 
         $failMessageEnvelope = $this->getResultMessageEnvelope($donation);
-        $transportException = new TransportException('Failure queue fell over');
+        $transportException = new TransportException('Result queue fell over');
         $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
         // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
         $outboundBusProphecy->dispatch($failMessageEnvelope)

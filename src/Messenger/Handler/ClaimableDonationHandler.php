@@ -69,7 +69,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                 $donations[$donation->id] = $formattedDonation;
             } catch (InvalidPostcodeException $exception) {
                 $this->logger->error(sprintf(
-                    'Could not reformat invalid postcode %s; sending %s to failure queue and not to HMRC.',
+                    'Could not reformat invalid postcode %s; sending %s to result queue as failed and not to HMRC.',
                     $donation->postcode,
                     $donation->id // e.g. Donation UUID.
                 ));
@@ -96,7 +96,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         } catch (DonationDataErrorsException $donationDataErrorsException) {
             foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
                 $this->logger->notice(sprintf(
-                    'Claim failed with donation-specific errors; sending %s to failure queue',
+                    'Claim failed with donation-specific errors; sending %s to result queue as failed',
                     $donationId,
                 ));
 
