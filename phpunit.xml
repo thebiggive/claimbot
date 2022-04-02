@@ -12,6 +12,5 @@
   </testsuites>
   <php>
     <env name="APP_ENV" value="test" force="true" />
-    <env name="MESSENGER_OUTBOUND_TRANSPORT_DSN" value="redis://redis:6379/matchbot-jobs" force="true" />
   </php>
 </phpunit>

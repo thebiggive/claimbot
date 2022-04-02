@@ -25,7 +25,6 @@ class ClaimableDonationHandlerTest extends TestCase
 {
     public function testSuccessFollowedByPollSuccess(): void
     {
-        // todo test that result queue publish happens
         $donationA = $this->getTestDonation();
         $donationB = clone $donationA;
         $donationB->id = 'efgh-5678';
@@ -50,8 +49,31 @@ class ClaimableDonationHandlerTest extends TestCase
             ->shouldBeCalledOnce()
             ->willReturn(2); // Just 2 messages per run for this test, so we get messages ack'd right away in 1 claim.
 
+        $donationAWithOutcomeFieldsSet = clone $donationA;
+        $donationAWithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
+        $donationAWithOutcomeFieldsSet->responseSuccess = true;
+        $donationAWithOutcomeFieldsSet->responseDetail = 'all good';
+
+        $donationBWithOutcomeFieldsSet = clone $donationB;
+        $donationBWithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
+        $donationBWithOutcomeFieldsSet->responseSuccess = true;
+        $donationBWithOutcomeFieldsSet->responseDetail = 'all good';
+
+        $donationAEnvelope = $this->getResultMessageEnvelope($donationAWithOutcomeFieldsSet);
+        $donationBEnvelope = $this->getResultMessageEnvelope($donationBWithOutcomeFieldsSet);
+
+        $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
+        // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
+        $outboundBusProphecy->dispatch($donationAEnvelope)
+            ->shouldBeCalledOnce()
+            ->willReturn($donationAEnvelope);
+        $outboundBusProphecy->dispatch($donationBEnvelope)
+            ->shouldBeCalledOnce()
+            ->willReturn($donationBEnvelope);
+
         $container = $this->getContainer();
         $container->set(Claimer::class, $claimerProphecy->reveal());
+        $container->set(OutboundMessageBus::class, $outboundBusProphecy->reveal());
         $container->set(SettingsInterface::class, $settingsProphecy->reveal());
 
         $handler = new ClaimableDonationHandler(
