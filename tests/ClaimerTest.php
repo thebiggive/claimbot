@@ -8,6 +8,8 @@ use ClaimBot\Claimer;
 use ClaimBot\Exception\DonationDataErrorsException;
 use ClaimBot\Exception\HMRCRejectionException;
 use ClaimBot\Exception\UnexpectedResponseException;
+use ClaimBot\Tests\TestUtils\AckThenResponseContent;
+use ClaimBot\Tests\TestUtils\AckThenResponseQualifier;
 use GovTalk\GiftAid\ClaimingOrganisation;
 use GovTalk\GiftAid\GiftAid;
 use Prophecy\Argument;
@@ -36,6 +38,49 @@ class ClaimerTest extends TestCase
                 'submission_response' => ['message' => ['Thanks for your submission...']],
             ]);
         $giftAidProphecy->getResponseQualifier()->shouldBeCalledOnce()->willReturn('response');
+
+        $container = $this->getContainer();
+        $container->set(GiftAid::class, $giftAidProphecy->reveal());
+
+        $claimer = new Claimer(
+            $container->get(GiftAid::class),
+            new NullLogger(),
+        );
+
+        $claimResult = $claimer->claim([$this->getTestDonation()->id => $this->getTestDonation()]);
+
+        $this->assertNull($claimer->getDonationError($this->getTestDonation()->id));
+        $this->assertEquals('["Thanks for your submission..."]', $claimer->getLastResponseMessage());
+        $this->assertEquals('someCorrId123', $claimer->getLastCorrelationId());
+        $this->assertCount(0, $claimer->getRemainingValidDonations());
+        $this->assertTrue($claimResult);
+    }
+
+    public function testClaimSuccessIncludingPollWithJustAckOnFirstAttempt(): void
+    {
+        $giftAidProphecy = $this->prophesize(GiftAid::class);
+        $giftAidProphecy->clearClaimingOrganisations()->shouldBeCalledOnce();
+        $giftAidProphecy->addClaimingOrganisation(Argument::type(ClaimingOrganisation::class))
+            ->shouldBeCalledOnce();
+        $giftAidProphecy->setClaimToDate('2021-09-10')->shouldBeCalledOnce();
+        $giftAidProphecy->giftAidSubmit(Argument::type('array'))->willReturn([
+            'correlationid' => 'someCorrId123',
+            'claim_data_xml' => '<?xml not-real-response-xml ?>',
+            'submission_request' => '<?xml not-real-request-xml ?>',
+        ]);
+        $giftAidProphecy->getResponseEndpoint()->shouldBeCalledOnce()->willReturn([
+            'endpoint' => 'https://example.local/poll',
+            'interval' => '1',
+        ]);
+
+        // Use a custom Prophecy Promise to vary the simulated behaviour.
+        $giftAidProphecy->declarationResponsePoll('someCorrId123', 'https://example.local/poll')
+            ->shouldBeCalledTimes(2)
+            ->will(new AckThenResponseContent());
+
+        $giftAidProphecy->getResponseQualifier()
+            ->shouldBeCalledTimes(2)
+            ->will(new AckThenResponseQualifier());
 
         $container = $this->getContainer();
         $container->set(GiftAid::class, $giftAidProphecy->reveal());

@@ -129,15 +129,11 @@ class Claimer
                 $correlationId
             ));
             $claimOutcome = $this->giftAid->declarationResponsePoll($correlationId, $pollUrl);
-            $gotResponse = $this->giftAid->getResponseQualifier() === 'response';
+            $qualifier = $this->giftAid->getResponseQualifier();
+            $gotResponse = $qualifier === 'response';
 
             if (!$gotResponse) {
-                $this->logger->debug(sprintf(
-                    'No response yet (%s), looping...',
-                    $this->giftAid->getResponseQualifier(),
-                ));
-
-                $this->logger->debug($this->giftAid->getFullXMLResponse());
+                $this->logger->debug(sprintf('No response yet (%s), looping...', $qualifier));
 
                 continue;
             }
