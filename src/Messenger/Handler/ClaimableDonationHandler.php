@@ -14,7 +14,6 @@ use ClaimBot\Settings\SettingsInterface;
 use Messages\Donation;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Envelope;
-use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Handler\Acknowledger;
 use Symfony\Component\Messenger\Handler\BatchHandlerInterface;
 use Symfony\Component\Messenger\Handler\BatchHandlerTrait;
@@ -176,9 +175,13 @@ class ClaimableDonationHandler implements BatchHandlerInterface
 
         try {
             $this->bus->dispatch(new Envelope($donation, $stamps));
-        } catch (TransportException $exception) {
+        } catch (\Throwable $exception) {
+            // We only *expect* Symfony\Component\Messenger\Exception\TransportException
+            // + subclasses here, but it's safer to catch everything to ensure unexpected
+            // issues can't derail the whole command run.
             $this->logger->error(sprintf(
-                'claimbot.donation.result queue dispatch error %s. Donation ID %s.',
+                'claimbot.donation.result queue dispatch error %s: %s. Donation ID %s.',
+                get_class($exception),
                 $exception->getMessage(),
                 $donation->id,
             ));
@@ -234,16 +237,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
             $donation->responseSuccess = true;
             $donation->responseDetail = $responseMessage;
 
-            try {
-                $this->sendToResultQueue($donation);
-            } catch (\Throwable $exception) {
-                $this->logger->error(sprintf(
-                    'Send to result queue for donation %s failed with %s: %s',
-                    $donationId,
-                    get_class($exception),
-                    $exception->getMessage(),
-                ));
-            }
+            $this->sendToResultQueue($donation);
 
             try {
                 $acknowledgers[$donationId]->ack(true);
