@@ -26,7 +26,7 @@ class AckThenResponseContent implements PromiseInterface
         }
 
         return [
-            'submission_response' => ['message' => ['Thanks for your submission...']],
+            'submission_response_message' => 'Thanks for your submission...',
         ];
     }
 }
