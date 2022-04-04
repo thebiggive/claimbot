@@ -216,6 +216,9 @@ class ClaimableDonationHandler implements BatchHandlerInterface
             $donation->postcode = (new PostcodeFormatter())->format('GB', $donation->postcode);
         }
 
+        // We've seen HMRC reject claims with lowercase letters.
+        $donation->org_hmrc_ref = strtoupper($donation->org_hmrc_ref);
+
         return $donation;
     }
 
