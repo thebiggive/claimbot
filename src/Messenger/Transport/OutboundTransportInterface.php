@@ -6,6 +6,6 @@ namespace ClaimBot\Messenger\Transport;
 
 use Symfony\Component\Messenger\Transport\TransportInterface;
 
-interface FailuresTransportInterface extends TransportInterface
+interface OutboundTransportInterface extends TransportInterface
 {
 }
