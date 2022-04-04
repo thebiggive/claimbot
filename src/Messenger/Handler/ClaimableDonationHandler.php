@@ -96,7 +96,10 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                     count($donations),
                 ));
             } else {
-                $this->logger->warning("Claim sent and %d donation messages ack'd, but poll timed out");
+                $this->logger->warning(sprintf(
+                    "Claim sent and %d donation messages ack'd, but poll timed out",
+                    count($donations),
+                ));
             }
         } catch (DonationDataErrorsException $donationDataErrorsException) {
             foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
@@ -212,6 +215,9 @@ class ClaimableDonationHandler implements BatchHandlerInterface
             // outside the UK.
             $donation->postcode = (new PostcodeFormatter())->format('GB', $donation->postcode);
         }
+
+        // We've seen HMRC reject claims with lowercase letters.
+        $donation->org_hmrc_ref = strtoupper($donation->org_hmrc_ref);
 
         return $donation;
     }

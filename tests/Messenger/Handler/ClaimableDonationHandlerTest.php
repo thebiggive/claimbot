@@ -29,12 +29,14 @@ class ClaimableDonationHandlerTest extends TestCase
         $donationA = $this->getTestDonation();
         $donationB = clone $donationA;
         $donationB->id = 'efgh-5678';
-        $donationB->org_hmrc_ref = 'CD12346';
+        $donationB->org_hmrc_ref = 'Cd12346'; // Lowercase to test auto-formatting
 
         $donations = [
             'abcd-1234' => $donationA,
             'efgh-5678' => $donationB,
         ];
+
+        $donations['efgh-5678']->org_hmrc_ref = 'CD12346'; // 'D' uppercased
 
         $claimerProphecy = $this->prophesize(Claimer::class);
         $claimerProphecy->claim($donations)->shouldBeCalledOnce()->willReturn(true);
