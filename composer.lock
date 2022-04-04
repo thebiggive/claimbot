@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dfa090b3b9e5f1512e44ef17ca33aa3c",
+    "content-hash": "b58b00c26d062ebadfc95c3b92e774ca",
     "packages": [
         {
             "name": "async-aws/core",
@@ -2706,16 +2706,16 @@
         },
         {
             "name": "thebiggive/hmrc-gift-aid",
-            "version": "v1.0.1",
+            "version": "v1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thebiggive/hmrc-gift-aid.git",
-                "reference": "3f934b3e6656d34f6f8d27361a6ff5460916f391"
+                "reference": "e6426072e803675f798c9981fb4910f7365be9e8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/3f934b3e6656d34f6f8d27361a6ff5460916f391",
-                "reference": "3f934b3e6656d34f6f8d27361a6ff5460916f391",
+                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/e6426072e803675f798c9981fb4910f7365be9e8",
+                "reference": "e6426072e803675f798c9981fb4910f7365be9e8",
                 "shasum": ""
             },
             "require": {
@@ -2765,9 +2765,9 @@
             "description": "A library for charities and CASCs to claim Gift Aid (including Small Donations) from HMRC",
             "homepage": "https://github.com/thebiggive/hmrc-gift-aid",
             "support": {
-                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v1.0.1"
+                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v1.0.2"
             },
-            "time": "2022-04-02T09:35:39+00:00"
+            "time": "2022-04-04T12:13:10+00:00"
         },
         {
             "name": "thebiggive/messages",
@@ -4704,16 +4704,16 @@
         },
         {
             "name": "sebastian/environment",
-            "version": "5.1.3",
+            "version": "5.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/environment.git",
-                "reference": "388b6ced16caa751030f6a69e588299fa09200ac"
+                "reference": "1b5dff7bb151a4db11d49d90e5408e4e938270f7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/environment/zipball/388b6ced16caa751030f6a69e588299fa09200ac",
-                "reference": "388b6ced16caa751030f6a69e588299fa09200ac",
+                "url": "https://api.github.com/repos/sebastianbergmann/environment/zipball/1b5dff7bb151a4db11d49d90e5408e4e938270f7",
+                "reference": "1b5dff7bb151a4db11d49d90e5408e4e938270f7",
                 "shasum": ""
             },
             "require": {
@@ -4755,7 +4755,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/environment/issues",
-                "source": "https://github.com/sebastianbergmann/environment/tree/5.1.3"
+                "source": "https://github.com/sebastianbergmann/environment/tree/5.1.4"
             },
             "funding": [
                 {
@@ -4763,7 +4763,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2020-09-28T05:52:38+00:00"
+            "time": "2022-04-03T09:37:03+00:00"
         },
         {
             "name": "sebastian/exporter",

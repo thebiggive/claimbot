@@ -28,6 +28,10 @@ In the **ClaimBot** project folder:
 
     docker-compose run --rm consumer
 
+### Run a one-off poll command
+
+    docker-compose run --rm consumer composer run claimbot:poll some-correlation-id
+
 ## Run unit tests
 
     docker-compose run --rm consumer composer run test

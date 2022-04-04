@@ -16,6 +16,7 @@ use Messages\Donation;
 use Prophecy\Argument;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\Exception\LogicException;
 use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Handler\Acknowledger;
 use Symfony\Component\Messenger\Stamp\BusNameStamp;
@@ -42,6 +43,77 @@ class ClaimableDonationHandlerTest extends TestCase
 
         $acknowledgerProphecy = $this->prophesize(Acknowledger::class);
         $acknowledgerProphecy->ack(true)->shouldBeCalledTimes(2);
+        $acknowledger = $acknowledgerProphecy->reveal();
+
+        $settingsProphecy = $this->prophesize(SettingsInterface::class);
+        $settingsProphecy->get('current_batch_size')
+            ->shouldBeCalledOnce()
+            ->willReturn(2); // Just 2 messages per run for this test, so we get messages ack'd right away in 1 claim.
+
+        $donationAWithOutcomeFieldsSet = clone $donationA;
+        $donationAWithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
+        $donationAWithOutcomeFieldsSet->responseSuccess = true;
+        $donationAWithOutcomeFieldsSet->responseDetail = 'all good';
+
+        $donationBWithOutcomeFieldsSet = clone $donationB;
+        $donationBWithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
+        $donationBWithOutcomeFieldsSet->responseSuccess = true;
+        $donationBWithOutcomeFieldsSet->responseDetail = 'all good';
+
+        $donationAEnvelope = $this->getResultMessageEnvelope($donationAWithOutcomeFieldsSet);
+        $donationBEnvelope = $this->getResultMessageEnvelope($donationBWithOutcomeFieldsSet);
+
+        $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
+        // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
+        $outboundBusProphecy->dispatch($donationAEnvelope)
+            ->shouldBeCalledOnce()
+            ->willReturn($donationAEnvelope);
+        $outboundBusProphecy->dispatch($donationBEnvelope)
+            ->shouldBeCalledOnce()
+            ->willReturn($donationBEnvelope);
+
+        $container = $this->getContainer();
+        $container->set(Claimer::class, $claimerProphecy->reveal());
+        $container->set(OutboundMessageBus::class, $outboundBusProphecy->reveal());
+        $container->set(SettingsInterface::class, $settingsProphecy->reveal());
+
+        $handler = new ClaimableDonationHandler(
+            $container->get(Claimer::class),
+            $container->get(LoggerInterface::class),
+            $container->get(OutboundMessageBus::class),
+            $container->get(PostcodeFormatter::class),
+            $container->get(SettingsInterface::class),
+        );
+
+        // These return "The number of pending messages in the batch if $ack is not null".
+        $this->assertEquals(1, $handler->__invoke($donationA, $acknowledger));
+        $this->assertEquals(0, $handler->__invoke($donationB, $acknowledger));
+    }
+
+    public function testSuccessFollowedByPollSuccessButWithAcknowledgerException(): void
+    {
+        $donationA = $this->getTestDonation();
+        $donationB = clone $donationA;
+        $donationB->id = 'efgh-5678';
+        $donationB->org_hmrc_ref = 'CD12346';
+
+        $donations = [
+            'abcd-1234' => $donationA,
+            'efgh-5678' => $donationB,
+        ];
+
+        $claimerProphecy = $this->prophesize(Claimer::class);
+        $claimerProphecy->claim($donations)->shouldBeCalledOnce()->willReturn(true);
+        $claimerProphecy->getLastCorrelationId()->shouldBeCalledOnce()->willReturn('corrId');
+        $claimerProphecy->getLastResponseMessage()->shouldBeCalledOnce()->willReturn('all good');
+
+        // We catch this and log an error, so for now the point of this test is just to
+        // demonstrate that the exception doesn't block the process and isn't left unhandled.
+        // We could expand the test to use a real logger and confirm the error is sent, but it's
+        // pretty unlikely this would go wrong.
+        $acknowledgerProphecy = $this->prophesize(Acknowledger::class);
+        $acknowledgerProphecy->ack(true)->shouldBeCalledTimes(2)
+            ->willThrow(new LogicException('Some ack error'));
         $acknowledger = $acknowledgerProphecy->reveal();
 
         $settingsProphecy = $this->prophesize(SettingsInterface::class);

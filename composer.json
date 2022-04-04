@@ -16,7 +16,7 @@
         "symfony/event-dispatcher": "^6.0",
         "symfony/messenger": "^6.0",
         "symfony/redis-messenger": "^6.0",
-        "thebiggive/hmrc-gift-aid": "^1.0.1",
+        "thebiggive/hmrc-gift-aid": "^1.0.2",
         "thebiggive/messages": "^2.0"
     },
     "require-dev": {
@@ -40,6 +40,10 @@
         }
     },
     "scripts": {
+        "claimbot:poll": [
+            "Composer\\Config::disableProcessTimeout",
+            "php claimbot-cli.php claimbot:poll"
+        ],
         "messenger:consume": [
             "Composer\\Config::disableProcessTimeout",
             "php claimbot-cli.php messenger:consume -vvvv --time-limit=600"

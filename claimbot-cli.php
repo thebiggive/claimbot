@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use ClaimBot\Claimer;
+use ClaimBot\Commands\Poll;
 use ClaimBot\Settings\Settings;
 use ClaimBot\Settings\SettingsInterface;
 use DI\Container;
@@ -43,7 +45,7 @@ if ($transport instanceof AmazonSqsTransport) {
 }
 $psr11App->set(SettingsInterface::class, $settings);
 
-$command = new ConsumeMessagesCommand(
+$consumeCommand = new ConsumeMessagesCommand(
     $psr11App->get(RoutableMessageBus::class),
     $messengerReceiverLocator,
     new EventDispatcher(),
@@ -51,7 +53,14 @@ $command = new ConsumeMessagesCommand(
     [$messengerReceiverKey],
 );
 
-$cliApp->add($command);
+$pollCommand = new Poll(
+    $psr11App->get(Claimer::class),
+    $psr11App->get(LoggerInterface::class),
+    $psr11App->get(SettingsInterface::class),
+);
+
+$cliApp->add($consumeCommand);
+$cliApp->add($pollCommand);
 $cliApp->run();
 
 /**
