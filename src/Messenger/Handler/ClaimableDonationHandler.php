@@ -67,12 +67,12 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                 // donation and we continue the `foreach` loop.
                 $donations[$donation->id] = $formattedDonation;
             } catch (InvalidPostcodeException $exception) {
-                $this->logger->error(sprintf(
+                $this->logger->warning(sprintf(
                     'Could not reformat invalid postcode %s; sending %s to result queue as failed and not to HMRC.',
                     $donation->postcode,
                     $donation->id // e.g. Donation UUID.
                 ));
-                // Let MatchBot record that there's an error. Note that in this failed validation
+                // Let MatchBot record that there's a failure. Note that in this failed validation
                 // case we set responseSuccess false even though there is no correlation ID,
                 // because we know it's likely not worth sending this bad data to HMRC.
                 $donation->responseSuccess = false;
