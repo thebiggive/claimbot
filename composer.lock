@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "19951361df5e2eff9e9376c7e04d5cfc",
+    "content-hash": "44069656eb135c1bd987c3ffe0f3b8b8",
     "packages": [
         {
             "name": "async-aws/core",
@@ -2706,16 +2706,16 @@
         },
         {
             "name": "thebiggive/hmrc-gift-aid",
-            "version": "v1.0.3",
+            "version": "v1.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thebiggive/hmrc-gift-aid.git",
-                "reference": "77bb0bba9708284b1d45433f1d3b53ddf639f190"
+                "reference": "7b8671bad78a8eddbcce63292535c77f11a552f5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/77bb0bba9708284b1d45433f1d3b53ddf639f190",
-                "reference": "77bb0bba9708284b1d45433f1d3b53ddf639f190",
+                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/7b8671bad78a8eddbcce63292535c77f11a552f5",
+                "reference": "7b8671bad78a8eddbcce63292535c77f11a552f5",
                 "shasum": ""
             },
             "require": {
@@ -2765,9 +2765,9 @@
             "description": "A library for charities and CASCs to claim Gift Aid (including Small Donations) from HMRC",
             "homepage": "https://github.com/thebiggive/hmrc-gift-aid",
             "support": {
-                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v1.0.3"
+                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v1.0.4"
             },
-            "time": "2022-04-04T15:27:22+00:00"
+            "time": "2022-04-04T16:37:31+00:00"
         },
         {
             "name": "thebiggive/messages",

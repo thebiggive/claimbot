@@ -30,7 +30,7 @@ class PollTest extends TestCase
     public function testClaimExceptionDuringPoll(): void
     {
         $giftAidProphecy = $this->prophesize(GiftAid::class);
-        $giftAidProphecy->getEndpoint(true)->shouldBeCalledOnce()
+        $giftAidProphecy->getClaimEndpoint()->shouldBeCalledOnce()
             ->willReturn('http://host.docker.internal:5665/submission');
 
         $giftAidProphecy->declarationResponsePoll('ABC123', 'http://host.docker.internal:5665/poll')
@@ -53,7 +53,7 @@ class PollTest extends TestCase
     public function testMiscExceptionDuringPoll(): void
     {
         $giftAidProphecy = $this->prophesize(GiftAid::class);
-        $giftAidProphecy->getEndpoint(true)->shouldBeCalledOnce()
+        $giftAidProphecy->getClaimEndpoint()->shouldBeCalledOnce()
             ->willReturn('http://host.docker.internal:5665/submission');
 
         $giftAidProphecy->declarationResponsePoll('ABC123', 'http://host.docker.internal:5665/poll')

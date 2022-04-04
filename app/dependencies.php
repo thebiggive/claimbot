@@ -70,7 +70,7 @@ return function (ContainerBuilder $containerBuilder) {
             // Not auth'd with ETS (for now).
             $ga->setAgentDetails(
                 getenv('HMRC_AGENT_NO'),
-                getenv('HMRC_AGENT_NAME'),
+                str_replace('\\s', ' ', getenv('HMRC_AGENT_NAME')),
                 [
                     'line' => explode(
                         ',',
