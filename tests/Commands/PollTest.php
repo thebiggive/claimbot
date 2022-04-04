@@ -18,7 +18,7 @@ class PollTest extends TestCase
 {
     public function testMissingCorrelationIdDoesNotRun(): void
     {
-        $command = $this->getCommandWithClaimer($this->getContainer()->get(Claimer::class));
+        $command = $this->getCommandWithClaimer($this->prophesize(Claimer::class)->reveal());
         $commandTester = new CommandTester($command);
 
         $this->expectException(RuntimeException::class);
