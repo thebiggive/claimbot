@@ -96,7 +96,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                     count($donations),
                 ));
             } else {
-                $this->logger->warning('Claim sent and %d donation messages ack\'d, but poll timed out');
+                $this->logger->warning("Claim sent and %d donation messages ack'd, but poll timed out");
             }
         } catch (DonationDataErrorsException $donationDataErrorsException) {
             foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
@@ -144,16 +144,11 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                     $acks[$donationId]->nack($retryException);
                 }
             }
-        } catch (ClaimException $exception) {
-            // There is some other error – potentially an internal problem rather than one with donation data.
-            // nack() all claim messages.
-
-            $this->logger->notice('Claim failed with general errors');
-
-            foreach ($acks as $ack) {
-                $ack->nack($exception);
-            }
         } catch (\Throwable $exception) {
+            // There is some other error – potentially an internal problem rather than one with donation data
+            // -> nack() all claim messages.
+            // Remaining exceptions *should* be ClaimException subclasses, but catch
+            // anything to be safe.
             $this->logger->error(sprintf(
                 'Claim failed with unexpected %s: %s',
                 get_class($exception),
