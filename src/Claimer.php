@@ -141,10 +141,7 @@ class Claimer
             if (!empty($claimOutcome['errors'])) {
                 $this->handleErrors($claimOutcome['errors']);
             } else {
-                $this->lastResponseMessage = json_encode(
-                    $claimOutcome['submission_response']['message'] ?? [],
-                    JSON_THROW_ON_ERROR,
-                );
+                $this->lastResponseMessage = $claimOutcome['submission_response_message'] ?? '[None]';
             }
 
             return true;

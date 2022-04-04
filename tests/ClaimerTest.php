@@ -35,7 +35,7 @@ class ClaimerTest extends TestCase
         ]);
         $giftAidProphecy->declarationResponsePoll('someCorrId123', 'https://example.local/poll')->shouldBeCalledOnce()
             ->willReturn([
-                'submission_response' => ['message' => ['Thanks for your submission...']],
+                'submission_response_message' => 'Thanks for your submission...',
             ]);
         $giftAidProphecy->getResponseQualifier()->shouldBeCalledOnce()->willReturn('response');
 
@@ -50,7 +50,7 @@ class ClaimerTest extends TestCase
         $claimResult = $claimer->claim([$this->getTestDonation()->id => $this->getTestDonation()]);
 
         $this->assertNull($claimer->getDonationError($this->getTestDonation()->id));
-        $this->assertEquals('["Thanks for your submission..."]', $claimer->getLastResponseMessage());
+        $this->assertEquals('Thanks for your submission...', $claimer->getLastResponseMessage());
         $this->assertEquals('someCorrId123', $claimer->getLastCorrelationId());
         $this->assertCount(0, $claimer->getRemainingValidDonations());
         $this->assertTrue($claimResult);
@@ -93,7 +93,7 @@ class ClaimerTest extends TestCase
         $claimResult = $claimer->claim([$this->getTestDonation()->id => $this->getTestDonation()]);
 
         $this->assertNull($claimer->getDonationError($this->getTestDonation()->id));
-        $this->assertEquals('["Thanks for your submission..."]', $claimer->getLastResponseMessage());
+        $this->assertEquals('Thanks for your submission...', $claimer->getLastResponseMessage());
         $this->assertEquals('someCorrId123', $claimer->getLastCorrelationId());
         $this->assertCount(0, $claimer->getRemainingValidDonations());
         $this->assertTrue($claimResult);
