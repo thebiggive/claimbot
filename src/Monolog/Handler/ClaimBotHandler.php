@@ -33,14 +33,18 @@ class ClaimBotHandler extends GroupHandler
         // Down from default 10k. Call `close()` on the logger to ensure anything left in the current batch is sent.
         $batchSize = 10;
 
-        $baseRequestHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_requests', $retentionDays, $batchSize);
-        $baseResponseHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_responses', $retentionDays, $batchSize);
+        $baseClaimRequestHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_requests', $retentionDays, $batchSize);
+        $baseClaimResponseHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_responses', $retentionDays, $batchSize);
+        $basePollRequestHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_poll_requests', $retentionDays, $batchSize);
+        $basePollResponseHandler = new CloudWatch($awsClient, $groupName, 'gift_aid_poll_responses', $retentionDays, $batchSize);
 
         $handlers = [
             new GeneralMessageHandlerWrapper($streamHandler), // Exclude full request + response messages.
             new GovTalkRequestResponseHandlerWrapper($govTalkRequestResponseStreamHandler),
-            new RequestMessageHandlerWrapper($baseRequestHandler),
-            new ResponseMessageHandlerWrapper($baseResponseHandler)
+            new ClaimRequestMessageHandlerWrapper($baseClaimRequestHandler),
+            new ClaimResponseMessageHandlerWrapper($baseClaimResponseHandler),
+            new PollRequestMessageHandlerWrapper($basePollRequestHandler),
+            new PollResponseMessageHandlerWrapper($basePollResponseHandler),
         ];
 
         parent::__construct($handlers, true);

@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace ClaimBot\Tests\Monolog\Handler;
 
-use ClaimBot\Monolog\Handler\ResponseMessageHandlerWrapper;
+use ClaimBot\Monolog\Handler\ClaimResponseMessageHandlerWrapper;
 use ClaimBot\Tests\TestCase;
 use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 
-class ResponseMessageHandlerWrapperTest extends TestCase
+class ClaimResponseMessageHandlerWrapperTest extends TestCase
 {
-    private ResponseMessageHandlerWrapper $handler;
+    private ClaimResponseMessageHandlerWrapper $handler;
 
     public function setUp(): void
     {
-        $this->handler = new ResponseMessageHandlerWrapper(new NullHandler());
+        $this->handler = new ClaimResponseMessageHandlerWrapper(new NullHandler());
     }
 
     public function testNoContextMessageIsNotHandled(): void
