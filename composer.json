@@ -46,7 +46,7 @@
         ],
         "messenger:consume": [
             "Composer\\Config::disableProcessTimeout",
-            "php claimbot-cli.php messenger:consume -vvvv --time-limit=600"
+            "php claimbot-cli.php messenger:consume -vvvv --time-limit=3000"
         ],
         "lint:check": "phpcs --standard=phpcs.xml -s .",
         "lint:fix": "phpcbf --standard=phpcs.xml -s .",
