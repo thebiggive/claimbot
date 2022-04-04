@@ -40,6 +40,10 @@
         }
     },
     "scripts": {
+        "claimbot:poll": [
+            "Composer\\Config::disableProcessTimeout",
+            "php claimbot-cli.php claimbot:poll"
+        ],
         "messenger:consume": [
             "Composer\\Config::disableProcessTimeout",
             "php claimbot-cli.php messenger:consume -vvvv --time-limit=600"

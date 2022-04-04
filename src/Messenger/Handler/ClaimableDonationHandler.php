@@ -86,13 +86,19 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         }
 
         try {
-            $this->claimer->claim($donations);
+            $outcome = $this->claimer->claim($donations);
+            // We assume success even if the poll is slow, but warning log that case below.
             $this->markSuccessful($donations, $acks);
 
-            $this->logger->info(sprintf(
-                'Claim sent and %d donation messages acknowledged',
-                count($donations), // Note that count is the # sent to HMRC, not necessarily the number we started with
-            ));
+            if ($outcome) {
+                $this->logger->info(sprintf(
+                    'Claim sent and %d donation messages acknowledged',
+                    // The number sent to HMRC, not necessarily the number we started with.
+                    count($donations),
+                ));
+            } else {
+                $this->logger->warning('Claim sent and %d donation messages ack\'d, but poll timed out');
+            }
         } catch (DonationDataErrorsException $donationDataErrorsException) {
             foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
                 $this->logger->notice(sprintf(
@@ -144,6 +150,16 @@ class ClaimableDonationHandler implements BatchHandlerInterface
             // nack() all claim messages.
 
             $this->logger->notice('Claim failed with general errors');
+
+            foreach ($acks as $ack) {
+                $ack->nack($exception);
+            }
+        } catch (\Throwable $exception) {
+            $this->logger->error(sprintf(
+                'Claim failed with unexpected %s: %s',
+                get_class($exception),
+                $exception->getMessage(),
+            ));
 
             foreach ($acks as $ack) {
                 $ack->nack($exception);
@@ -217,9 +233,28 @@ class ClaimableDonationHandler implements BatchHandlerInterface
             $donation->submissionCorrelationId = $correlationId;
             $donation->responseSuccess = true;
             $donation->responseDetail = $responseMessage;
-            $this->sendToResultQueue($donation);
 
-            $acknowledgers[$donationId]->ack(true);
+            try {
+                $this->sendToResultQueue($donation);
+            } catch (\Throwable $exception) {
+                $this->logger->error(sprintf(
+                    'Send to result queue for donation %s failed with %s: %s',
+                    $donationId,
+                    get_class($exception),
+                    $exception->getMessage(),
+                ));
+            }
+
+            try {
+                $acknowledgers[$donationId]->ack(true);
+            } catch (\Throwable $exception) {
+                $this->logger->error(sprintf(
+                    'Success ack for donation %s failed with %s: %s',
+                    $donationId,
+                    get_class($exception),
+                    $exception->getMessage(),
+                ));
+            }
         }
     }
 }
