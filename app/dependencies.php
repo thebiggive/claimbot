@@ -3,10 +3,11 @@
 declare(strict_types=1);
 
 use Aws\CloudWatchLogs\CloudWatchLogsClient;
+use Brick\Postcode\PostcodeFormatter;
 use ClaimBot\Claimer;
 use ClaimBot\Messenger\Handler\ClaimableDonationHandler;
 use ClaimBot\Messenger\OutboundMessageBus;
-use ClaimBot\Messenger\Transport\FailuresTransportInterface;
+use ClaimBot\Messenger\Transport\OutboundTransportInterface;
 use ClaimBot\Monolog\Handler\ClaimBotHandler;
 use ClaimBot\Settings\SettingsInterface;
 use DI\Container;
@@ -80,7 +81,8 @@ return function (ContainerBuilder $containerBuilder) {
                     'country' => 'United Kingdom',
                 ],
                 null,
-                'ClaimBot-' . $c->get(SettingsInterface::class)->get('version') . '-' . date('Y-m-d'),
+                // Outputs e.g. CBv1.1-2022-01-01. Max length for ClaimNo accepted by HMRC is 20 chars.
+                'CB' . $c->get(SettingsInterface::class)->get('version') . '-' . date('Y-m-d'),
             );
 
             // ETS returns an error if you set a GatewayTimestamp – can only use this for LTS.
@@ -127,11 +129,15 @@ return function (ContainerBuilder $containerBuilder) {
             return new OutboundMessageBus([
                 new SendMessageMiddleware(new SendersLocator(
                     [
-                        Donation::class => [FailuresTransportInterface::class], // Outbound -> donation error queue.
+                        Donation::class => [OutboundTransportInterface::class], // Outbound -> donation error queue.
                     ],
                     $c,
                 )),
             ]);
+        },
+
+        PostcodeFormatter::class => static function (ContainerInterface $c): PostcodeFormatter {
+            return new PostcodeFormatter();
         },
 
         RoutableMessageBus::class => static function (ContainerInterface $c): RoutableMessageBus {
@@ -139,19 +145,19 @@ return function (ContainerBuilder $containerBuilder) {
             // Inbound
             $busContainer->set('claimbot.donation.claim', $c->get(MessageBusInterface::class));
             // Outbound
-            $busContainer->set('claimbot.donation.error', $c->get(OutboundMessageBus::class));
+            $busContainer->set('claimbot.donation.result', $c->get(OutboundMessageBus::class));
 
             return new RoutableMessageBus($busContainer);
         },
 
-        // Outbound messages are all donation failures.
-        FailuresTransportInterface::class => static function (ContainerInterface $c): TransportInterface {
+        // Outbound messages are donation objects with claim outcome metadata.
+        OutboundTransportInterface::class => static function (ContainerInterface $c): TransportInterface {
             $transportFactory = new TransportFactory([
                 new AmazonSqsTransportFactory(),
                 new RedisTransportFactory(),
             ]);
             return $transportFactory->createTransport(
-                getenv('MESSENGER_FAILURE_QUEUE_TRANSPORT_DSN'),
+                getenv('MESSENGER_OUTBOUND_TRANSPORT_DSN'),
                 [],
                 new PhpSerializer(),
             );

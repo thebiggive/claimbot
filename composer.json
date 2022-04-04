@@ -2,11 +2,12 @@
     "name": "thebiggive/claimbot",
     "description": "Gift Aid claim runner",
     "type": "project",
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
         "php": "^8.0.2",
         "ext-redis": "*",
+        "brick/postcode": "^0.2.6",
         "maxbanton/cwh": "^2.0",
         "monolog/monolog": "^2.3",
         "php-di/php-di": "^6.3",
@@ -15,8 +16,8 @@
         "symfony/event-dispatcher": "^6.0",
         "symfony/messenger": "^6.0",
         "symfony/redis-messenger": "^6.0",
-        "thebiggive/hmrc-gift-aid": "^1.0.0",
-        "thebiggive/messages": "^1.0"
+        "thebiggive/hmrc-gift-aid": "^1.0.1",
+        "thebiggive/messages": "^2.0"
     },
     "require-dev": {
         "phpspec/prophecy-phpunit": "^2.0",

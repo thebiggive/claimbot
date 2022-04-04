@@ -14,8 +14,7 @@ You might for example:
 * Put some eligible-for-claims donation data into your local/Docker database, manually
   or with [the Donate frontend](https://github.com/thebiggive/donate-frontend).
 * Consider temporarily tweaking MatchBot's `DonationRepository::findReadyToClaimGiftAid()`
-  and/or ClaimBot's `$donationsPerClaim` whose default is in the constuctor args
-  for [`ClaimableDonationHandler`](./src/Messenger/Handler/ClaimableDonationHandler.php).
+  and/or ClaimBot's `max_batch_size` in the [`settings`](./app/settings.php).
 
 ### Publish messages
 
@@ -61,6 +60,15 @@ Because HMRC require Java [1.]7 specifically, you must:
 * navigate to the LTS location, e.g. `cd ~/devtools/HMRCTools/LTS`
 * ensure your normal env vars have `$LTS_HOME` set to the full path of the above, e.g. in your profile script `~/.zshrc` on modern macOS versions.
 * set `$JAVA_HOME` to the version [1.]7 Java at runtime as you start the service: `JAVA_HOME=$(/usr/libexec/java_home -v 1.7) ./RunLTSStandalone.sh`
+
+To have your local ClaimBot in Docker send data to the LTS, uncomment the
+line in [dependencies.php](./app/dependencies.php) marked
+
+> ... // Uncomment to use LTS rather than ETS
+
+and this one:
+
+> $ga->setTimestamp(new \DateTime());
 
 ### Pre-First Run
 
