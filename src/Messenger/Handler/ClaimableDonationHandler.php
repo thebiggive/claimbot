@@ -14,7 +14,6 @@ use ClaimBot\Settings\SettingsInterface;
 use Messages\Donation;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Envelope;
-use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Handler\Acknowledger;
 use Symfony\Component\Messenger\Handler\BatchHandlerInterface;
 use Symfony\Component\Messenger\Handler\BatchHandlerTrait;
@@ -86,13 +85,19 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         }
 
         try {
-            $this->claimer->claim($donations);
+            $outcome = $this->claimer->claim($donations);
+            // We assume success even if the poll is slow, but warning log that case below.
             $this->markSuccessful($donations, $acks);
 
-            $this->logger->info(sprintf(
-                'Claim sent and %d donation messages acknowledged',
-                count($donations), // Note that count is the # sent to HMRC, not necessarily the number we started with
-            ));
+            if ($outcome) {
+                $this->logger->info(sprintf(
+                    'Claim sent and %d donation messages acknowledged',
+                    // The number sent to HMRC, not necessarily the number we started with.
+                    count($donations),
+                ));
+            } else {
+                $this->logger->warning("Claim sent and %d donation messages ack'd, but poll timed out");
+            }
         } catch (DonationDataErrorsException $donationDataErrorsException) {
             foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
                 $this->logger->notice(sprintf(
@@ -139,11 +144,16 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                     $acks[$donationId]->nack($retryException);
                 }
             }
-        } catch (ClaimException $exception) {
-            // There is some other error – potentially an internal problem rather than one with donation data.
-            // nack() all claim messages.
-
-            $this->logger->notice('Claim failed with general errors');
+        } catch (\Throwable $exception) {
+            // There is some other error – potentially an internal problem rather than one with donation data
+            // -> nack() all claim messages.
+            // Remaining exceptions *should* be ClaimException subclasses, but catch
+            // anything to be safe.
+            $this->logger->error(sprintf(
+                'Claim failed with unexpected %s: %s',
+                get_class($exception),
+                $exception->getMessage(),
+            ));
 
             foreach ($acks as $ack) {
                 $ack->nack($exception);
@@ -160,9 +170,13 @@ class ClaimableDonationHandler implements BatchHandlerInterface
 
         try {
             $this->bus->dispatch(new Envelope($donation, $stamps));
-        } catch (TransportException $exception) {
+        } catch (\Throwable $exception) {
+            // We only *expect* Symfony\Component\Messenger\Exception\TransportException
+            // + subclasses here, but it's safer to catch everything to ensure unexpected
+            // issues can't derail the whole command run.
             $this->logger->error(sprintf(
-                'claimbot.donation.result queue dispatch error %s. Donation ID %s.',
+                'claimbot.donation.result queue dispatch error %s: %s. Donation ID %s.',
+                get_class($exception),
                 $exception->getMessage(),
                 $donation->id,
             ));
@@ -217,9 +231,19 @@ class ClaimableDonationHandler implements BatchHandlerInterface
             $donation->submissionCorrelationId = $correlationId;
             $donation->responseSuccess = true;
             $donation->responseDetail = $responseMessage;
+
             $this->sendToResultQueue($donation);
 
-            $acknowledgers[$donationId]->ack(true);
+            try {
+                $acknowledgers[$donationId]->ack(true);
+            } catch (\Throwable $exception) {
+                $this->logger->error(sprintf(
+                    'Success ack for donation %s failed with %s: %s',
+                    $donationId,
+                    get_class($exception),
+                    $exception->getMessage(),
+                ));
+            }
         }
     }
 }

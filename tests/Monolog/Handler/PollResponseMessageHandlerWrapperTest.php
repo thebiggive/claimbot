@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace ClaimBot\Tests\Monolog\Handler;
 
-use ClaimBot\Monolog\Handler\RequestMessageHandlerWrapper;
+use ClaimBot\Monolog\Handler\PollResponseMessageHandlerWrapper;
 use ClaimBot\Tests\TestCase;
 use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 
-class RequestMessageHandlerWrapperTest extends TestCase
+class PollResponseMessageHandlerWrapperTest extends TestCase
 {
-    private RequestMessageHandlerWrapper $handler;
+    private PollResponseMessageHandlerWrapper $handler;
 
     public function setUp(): void
     {
-        $this->handler = new RequestMessageHandlerWrapper(new NullHandler());
+        $this->handler = new PollResponseMessageHandlerWrapper(new NullHandler());
     }
 
     public function testNoContextMessageIsNotHandled(): void
@@ -47,7 +47,7 @@ class RequestMessageHandlerWrapperTest extends TestCase
         $log = [
             'message' => 'Some Gift Aid request data',
             'level' => Logger::INFO,
-            'context' => ['gift_aid_message' => 'request'],
+            'context' => ['gift_aid_message' => 'poll_response'],
             'extra' => [],
         ];
 

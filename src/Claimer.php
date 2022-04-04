@@ -115,7 +115,7 @@ class Claimer
         return $this->donationErrorMessages[$donationId] ?? null;
     }
 
-    private function pollForResponse(string $correlationId, string $pollUrl, int $pollInterval = 1): bool
+    public function pollForResponse(string $correlationId, string $pollUrl, int $pollInterval = 1): bool
     {
         $maxSecondsToPoll = 45;
         $startTime = microtime(true);
@@ -124,15 +124,15 @@ class Claimer
         while ((microtime(true) - $startTime) < $maxSecondsToPoll) { // And while nothing has `return`ed.
             sleep($pollInterval);
             $this->logger->info(sprintf(
-                'Sending poll request to %s for correlation ID %s',
+                'Sending poll request to %s for correlation ID %s – slept %ds as instructed',
                 $pollUrl,
-                $correlationId
+                $correlationId,
+                $pollInterval,
             ));
             $claimOutcome = $this->giftAid->declarationResponsePoll($correlationId, $pollUrl);
             $qualifier = $this->giftAid->getResponseQualifier();
-            $gotResponse = $qualifier === 'response';
 
-            if (!$gotResponse) {
+            if ($qualifier !== 'response') {
                 $this->logger->debug(sprintf('No response yet (%s), looping...', $qualifier));
 
                 continue;
@@ -152,6 +152,15 @@ class Claimer
 
         $this->logger->error(sprintf('No poll response after %d seconds', $maxSecondsToPoll));
         return false;
+    }
+
+    public function getDefaultPollUrl(bool $testMode): string
+    {
+        return str_replace(
+            '/submission',
+            '/poll',
+            $this->giftAid->getEndpoint($testMode),
+        );
     }
 
     private function handleErrors(array $errors): void
