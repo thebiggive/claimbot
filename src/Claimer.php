@@ -156,7 +156,7 @@ class Claimer
         return str_replace(
             '/submission',
             '/poll',
-            $this->giftAid->getEndpoint($testMode),
+            $this->giftAid->getClaimEndpoint(),
         );
     }
 
