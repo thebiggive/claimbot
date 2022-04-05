@@ -120,6 +120,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
 
             $donationsToRetry = $this->claimer->getRemainingValidDonations();
             if (count($donationsToRetry) === 0) {
+                $this->logger->info('Returning as there are no donations left to retry');
                 return;
             }
 
@@ -218,6 +219,9 @@ class ClaimableDonationHandler implements BatchHandlerInterface
 
         // We've seen HMRC reject claims with lowercase letters.
         $donation->org_hmrc_ref = strtoupper($donation->org_hmrc_ref);
+
+        // HMRC reject claims with "Invalid content found at element 'House'" if too large.
+        $donation->house_no = mb_substr($donation->house_no, 0, 40);
 
         return $donation;
     }

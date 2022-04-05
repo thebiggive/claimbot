@@ -70,6 +70,7 @@ class Claimer
         $claimOutcome = $this->giftAid->giftAidSubmit($plainArrayDonations);
 
         if (!empty($claimOutcome['correlationid'])) {
+            $this->remainingValidDonations = $donations;
             $this->lastCorrelationId = $claimOutcome['correlationid'];
 
             $this->logger->info(sprintf('Claim acknowledged. Correlation ID %s', $this->lastCorrelationId));
@@ -80,8 +81,6 @@ class Claimer
 
             return $this->pollForResponse($this->lastCorrelationId, $pollUrl, $pollInterval);
         }
-
-        $this->remainingValidDonations = $donations;
 
         if (empty($claimOutcome['errors'])) {
             $this->logger->error('Neither correlation ID nor errors. Is the endpoint valid?');
@@ -141,6 +140,7 @@ class Claimer
                 $this->handleErrors($claimOutcome['errors']);
             } else {
                 $this->lastResponseMessage = $claimOutcome['submission_response_message'] ?? '[None]';
+                $this->remainingValidDonations = [];
             }
 
             return true;
@@ -177,13 +177,13 @@ class Claimer
                     unset($this->remainingValidDonations[$error['donation_id']]);
                     $failedDonationErrors[$error['donation_id']] = $error;
                     $this->logger->error(sprintf(
-                        'Donation ID %s error at %s: %s – %s',
+                        'Donation ID %s error at %s [%s]: %s',
                         $error['donation_id'],
                         $error['location'],
                         $error['message'],
                         $error['text'],
                     ));
-                    $this->donationErrorMessages[$error['donation_id']] = $error['message'];
+                    $this->donationErrorMessages[$error['donation_id']] = $error['text'];
                     unset($nonDonationMappedErrors['business'][$key]);
                 }
             }
@@ -194,7 +194,7 @@ class Claimer
         }
 
         // Log remaining errors.
-        $this->logger->error('Remaining errors: ' . print_r($nonDonationMappedErrors, true));
+        $this->logger->debug('Remaining errors: ' . print_r($nonDonationMappedErrors, true));
 
         if (!empty($failedDonationErrors)) {
             $exception = new DonationDataErrorsException($failedDonationErrors);

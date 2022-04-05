@@ -16,13 +16,15 @@ class DonationDataErrorsExceptionTest extends TestCase
         $donationErrors = [
             'idA' => [
                 'donation_id' => 'idA',
-                'message' => "Invalid content found at element 'Sur'",
+                'message' => "cvc-type.3.1.3: The value '' of element 'Sur' is not valid.",
+                'text' => "Invalid content found at element 'Sur'",
                 'location' => '/hd:GovTalkMessage[1]/hd:Body[1]/r68:IRenvelope[1]/r68:R68[1]/' .
                     'r68:Claim[1]/r68:Repayment[1]/r68:GAD[1]/r68:Donor[1]/r68:Sur[1]',
             ],
             'idB' => [
                 'donation_id' => 'idB',
-                'message' => "Invalid content found at element 'Fore'",
+                'message' => "cvc-type.3.1.3: The value '' of element 'Fore' is not valid.",
+                'text' => "Invalid content found at element 'Fore'",
                 'location' => '/hd:GovTalkMessage[1]/hd:Body[1]/r68:IRenvelope[1]/r68:R68[1]/' .
                     'r68:Claim[2]/r68:Repayment[1]/r68:GAD[1]/r68:Donor[1]/r68:Sur[1]',
             ],
@@ -36,7 +38,7 @@ class DonationDataErrorsExceptionTest extends TestCase
         $this->assertCount(2, $this->exception->getDonationErrors());
         $this->assertEquals(
             "Invalid content found at element 'Sur'",
-            $this->exception->getDonationErrors()['idA']['message'],
+            $this->exception->getDonationErrors()['idA']['text'],
         );
 
         $this->assertEquals('Donation-specific errors', $this->exception->getMessage());
