@@ -120,6 +120,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
 
             $donationsToRetry = $this->claimer->getRemainingValidDonations();
             if (count($donationsToRetry) === 0) {
+                $this->logger->info('Returning as there are no donations left to retry');
                 return;
             }
 
