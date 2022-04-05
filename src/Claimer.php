@@ -70,6 +70,7 @@ class Claimer
         $claimOutcome = $this->giftAid->giftAidSubmit($plainArrayDonations);
 
         if (!empty($claimOutcome['correlationid'])) {
+            $this->remainingValidDonations = $donations;
             $this->lastCorrelationId = $claimOutcome['correlationid'];
 
             $this->logger->info(sprintf('Claim acknowledged. Correlation ID %s', $this->lastCorrelationId));
@@ -80,8 +81,6 @@ class Claimer
 
             return $this->pollForResponse($this->lastCorrelationId, $pollUrl, $pollInterval);
         }
-
-        $this->remainingValidDonations = $donations;
 
         if (empty($claimOutcome['errors'])) {
             $this->logger->error('Neither correlation ID nor errors. Is the endpoint valid?');
@@ -141,6 +140,7 @@ class Claimer
                 $this->handleErrors($claimOutcome['errors']);
             } else {
                 $this->lastResponseMessage = $claimOutcome['submission_response_message'] ?? '[None]';
+                $this->remainingValidDonations = [];
             }
 
             return true;
