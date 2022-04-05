@@ -29,6 +29,7 @@ class ClaimableDonationHandlerTest extends TestCase
         $donationA = $this->getTestDonation();
         $donationB = clone $donationA;
         $donationB->id = 'efgh-5678';
+        $donationB->house_no = '123 Main Very Long Named Named Named Named Named St';
         $donationB->org_hmrc_ref = 'Cd12346'; // Lowercase to test auto-formatting
 
         $donations = [
@@ -36,6 +37,7 @@ class ClaimableDonationHandlerTest extends TestCase
             'efgh-5678' => $donationB,
         ];
 
+        $donations['efgh-5678']->house_no = '123 Main Very Long Named Named Named Nam'; // truncated
         $donations['efgh-5678']->org_hmrc_ref = 'CD12346'; // 'D' uppercased
 
         $claimerProphecy = $this->prophesize(Claimer::class);
