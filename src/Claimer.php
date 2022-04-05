@@ -177,13 +177,13 @@ class Claimer
                     unset($this->remainingValidDonations[$error['donation_id']]);
                     $failedDonationErrors[$error['donation_id']] = $error;
                     $this->logger->error(sprintf(
-                        'Donation ID %s error at %s: %s – %s',
+                        'Donation ID %s error at %s [%s]: %s',
                         $error['donation_id'],
                         $error['location'],
                         $error['message'],
                         $error['text'],
                     ));
-                    $this->donationErrorMessages[$error['donation_id']] = $error['message'];
+                    $this->donationErrorMessages[$error['donation_id']] = $error['text'];
                     unset($nonDonationMappedErrors['business'][$key]);
                 }
             }
@@ -194,7 +194,7 @@ class Claimer
         }
 
         // Log remaining errors.
-        $this->logger->error('Remaining errors: ' . print_r($nonDonationMappedErrors, true));
+        $this->logger->debug('Remaining errors: ' . print_r($nonDonationMappedErrors, true));
 
         if (!empty($failedDonationErrors)) {
             $exception = new DonationDataErrorsException($failedDonationErrors);
