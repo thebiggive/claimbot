@@ -5,7 +5,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": "^8.0.2",
+        "php": ">=8.0",
         "ext-redis": "*",
         "brick/postcode": "^0.2.6",
         "maxbanton/cwh": "^2.0",
@@ -46,7 +46,7 @@
         ],
         "messenger:consume": [
             "Composer\\Config::disableProcessTimeout",
-            "php claimbot-cli.php messenger:consume -vvvv --time-limit=3000"
+            "php claimbot-cli.php messenger:consume -vvvv --time-limit=1680"
         ],
         "lint:check": "phpcs --standard=phpcs.xml -s .",
         "lint:fix": "phpcbf --standard=phpcs.xml -s .",
