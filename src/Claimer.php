@@ -109,6 +109,9 @@ class Claimer
         return $this->lastResponseMessage;
     }
 
+    /**
+     * Get summarised error message for the given donation ID, if any.
+     */
     public function getDonationError(string $donationId): ?string
     {
         return $this->donationErrorMessages[$donationId] ?? null;
