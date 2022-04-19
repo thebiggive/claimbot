@@ -16,15 +16,9 @@
         "symfony/event-dispatcher": "^6.0",
         "symfony/messenger": "^6.0",
         "symfony/redis-messenger": "^6.0",
-        "thebiggive/hmrc-gift-aid": "dev-CLA-25-fix-agent-element",
+        "thebiggive/hmrc-gift-aid": "^2.0",
         "thebiggive/messages": "^3.0"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url":  "git@github.com:thebiggive/hmrc-gift-aid.git"
-        }
-    ],
     "require-dev": {
         "phpspec/prophecy-phpunit": "^2.0",
         "phpunit/phpunit": "^9.5",
