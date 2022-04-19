@@ -32,4 +32,9 @@ class FormatTest extends TestCase
     {
         $this->assertEquals('IM1 1AA', Format::formatCrownDependencyPseudoPostcode('im11aa'));
     }
+
+    public function testFormatInvalidGivesBlankString(): void
+    {
+        $this->assertEquals('', Format::formatCrownDependencyPseudoPostcode('N1 1AA'));
+    }
 }
