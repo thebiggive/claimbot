@@ -30,6 +30,7 @@ class ClaimableDonationHandlerTest extends TestCase
         $donationB = clone $donationA;
         $donationB->id = 'efgh-5678';
         $donationB->house_no = '123 Main Very Long Named Named Named Named Named St';
+        $donationB->postcode = 'IM1 1AA'; // Test crown dependency handling implicitly.
 
         $donations = [
             'abcd-1234' => $donationA,

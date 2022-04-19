@@ -9,6 +9,7 @@ use Brick\Postcode\PostcodeFormatter;
 use ClaimBot\Claimer;
 use ClaimBot\Exception\ClaimException;
 use ClaimBot\Exception\DonationDataErrorsException;
+use ClaimBot\Format;
 use ClaimBot\Messenger\OutboundMessageBus;
 use ClaimBot\Settings\SettingsInterface;
 use Messages\Donation;
@@ -242,7 +243,15 @@ class ClaimableDonationHandler implements BatchHandlerInterface
             // MatchBot sets postcode to blank string if the donor has said they're overseas in the context of
             // the Gift Aid / home address input. HMRC does not expect/allow any zip when we say the donor lives
             // outside the UK.
-            $donation->postcode = (new PostcodeFormatter())->format('GB', $donation->postcode);
+            try {
+                $donation->postcode = (new PostcodeFormatter())->format('GB', $donation->postcode);
+            } catch (InvalidPostcodeException $exception) {
+                if (!Format::isCrownDependencyPseudoPostcode($donation->postcode)) {
+                    throw $exception;
+                }
+
+                $donation->postcode = Format::formatCrownDependencyPseudoPostcode($donation->postcode);
+            }
         }
 
         // We've seen HMRC reject claims with lowercase letters.
