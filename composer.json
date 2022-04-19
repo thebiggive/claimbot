@@ -5,7 +5,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": ">=8.0",
+        "php": "^8.1",
         "ext-redis": "*",
         "brick/postcode": "^0.2.6",
         "maxbanton/cwh": "^2.0",
@@ -26,8 +26,11 @@
         "squizlabs/php_codesniffer": "^3.6"
     },
     "config": {
-        "sort-packages": true,
-        "optimize-autoloader": true
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "8.1.5"
+        },
+        "sort-packages": true
     },
     "autoload": {
         "psr-4": {
@@ -50,8 +53,7 @@
         ],
         "lint:check": "phpcs --standard=phpcs.xml -s .",
         "lint:fix": "phpcbf --standard=phpcs.xml -s .",
-        "test": "phpunit",
-        "test-with-coverage": "phpdbg -qrr ./vendor/bin/phpunit --coverage-clover=coverage.xml"
+        "test": "XDEBUG_MODE=coverage phpunit"
     },
     "license": "MIT",
     "authors": [
