@@ -50,6 +50,10 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         return $this->handle($message, $ack);
     }
 
+    /**
+     * @param array $jobs   2D array of Donation message and Acknowledger pairs. May contain donations for
+     *                      multiple charities, so we should expect to make 1 or many claims.
+     */
     private function process(array $jobs): void
     {
         // Both keyed on donation ID.
@@ -73,9 +77,9 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                     $donation->id // e.g. Donation UUID.
                 ));
                 // Let MatchBot record that there's a failure. Note that in this failed validation
-                // case we set responseSuccess false even though there is no correlation ID,
+                // case we set response_success false even though there is no correlation ID,
                 // because we know it's likely not worth sending this bad data to HMRC.
-                $donation->responseSuccess = false;
+                $donation->response_success = false;
                 $this->sendToResultQueue($donation);
 
                 // Don't keep re-trying the donation – ack it to the inbound ClaimBot queue.
@@ -84,85 +88,109 @@ class ClaimableDonationHandler implements BatchHandlerInterface
             }
         }
 
-        try {
-            $outcome = $this->claimer->claim($donations);
-            // We assume success even if the poll is slow, but warning log that case below.
-            $this->markSuccessful($donations, $acks);
+        // Everything is formatted and, if appropriate, rejected. We can now send 1 or many claims, one per
+        // charity, for whatever's left.
 
-            if ($outcome) {
-                $this->logger->info(sprintf(
-                    'Claim sent and %d donation messages acknowledged',
-                    // The number sent to HMRC, not necessarily the number we started with.
-                    count($donations),
-                ));
-            } else {
-                $this->logger->warning(sprintf(
-                    "Claim sent and %d donation messages ack'd, but poll timed out",
-                    count($donations),
-                ));
-            }
-        } catch (DonationDataErrorsException $donationDataErrorsException) {
-            foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
-                $this->logger->notice(sprintf(
-                    'Claim failed with donation-specific errors; sending %s to result queue as failed',
-                    $donationId,
-                ));
+        $acksByCharity = $this->splitAcksByOrgRef($acks, $donations);
+        $donationsByCharity = $this->splitDonationsByOrgRef($donations);
 
-                $donations[$donationId]->responseSuccess = false;
-                $donations[$donationId]->responseDetail = $this->claimer->getDonationError($donationId);
-                $donations[$donationId]->submissionCorrelationId = $this->claimer->getLastCorrelationId();
-                $this->sendToResultQueue($donations[$donationId]); // Let MatchBot record that there's an error.
-
-                // Don't keep re-trying the donation – ack it to the inbound ClaimBot queue.
-                $acks[$donationId]->ack(false);
-                unset($acks[$donationId]);
-            }
-
-            $donationsToRetry = $this->claimer->getRemainingValidDonations();
-            if (count($donationsToRetry) === 0) {
-                $this->logger->info('Returning as there are no donations left to retry');
-                return;
-            }
-
-            $this->logger->info(sprintf('Retrying %d remaining donations without errors...', count($donationsToRetry)));
-
-            try {
-                $this->claimer->claim($donationsToRetry);
-
-                // Success – for the remainder!
-                $this->markSuccessful($donationsToRetry, $acks);
-
-                $this->logger->info(sprintf(
-                    'Re-tried claim succeeded and %d donation messages acknowledged',
-                    count($donationsToRetry),
-                ));
-            } catch (ClaimException $retryException) {
-                $this->logger->error('Re-tried claim failed too. No more error detection.');
-
-                foreach ($donationsToRetry as $donationId => $donation) {
-                    // Something unexpected is going on – probably most helpful to send all impacted
-                    // donations to the error queue so they can be easily investigated in MatchBot
-                    // DB.
-                    $donation->responseSuccess = false;
-                    $this->sendToResultQueue($donation);
-                    $acks[$donationId]->nack($retryException);
-                }
-            }
-        } catch (\Throwable $exception) {
-            // There is some other error – potentially an internal problem rather than one with donation data
-            // -> nack() all claim messages.
-            // Remaining exceptions *should* be ClaimException subclasses, but catch
-            // anything to be safe.
-            $this->logger->error(sprintf(
-                'Claim failed with unexpected %s: %s',
-                get_class($exception),
-                $exception->getMessage(),
+        foreach ($donationsByCharity as $orgRef => $thisCharityDonations) {
+            $this->logger->info(sprintf(
+                'Preparing claim for %d donations to HMRC org ref %s',
+                count($thisCharityDonations),
+                $orgRef,
             ));
 
-            foreach ($acks as $ack) {
-                $ack->nack($exception);
+            $thisCharityAcks = $acksByCharity[$orgRef];
+
+            try {
+                $outcome = $this->claimer->claim($thisCharityDonations);
+                // We assume success even if the poll is slow, but warning log that case below.
+                $this->markSuccessful($thisCharityDonations, $thisCharityAcks);
+
+                if ($outcome) {
+                    $this->logger->info(sprintf(
+                        'Claim sent and %d donation messages acknowledged',
+                        // The number sent to HMRC, not necessarily the number we started with.
+                        count($donations),
+                    ));
+                } else {
+                    $this->logger->warning(sprintf(
+                        "Claim sent and %d donation messages ack'd, but poll timed out",
+                        count($donations),
+                    ));
+                }
+            } catch (DonationDataErrorsException $donationDataErrorsException) {
+                foreach (array_keys($donationDataErrorsException->getDonationErrors()) as $donationId) {
+                    $this->logger->notice(sprintf(
+                        'Claim failed with donation-specific errors; sending %s to result queue as failed',
+                        $donationId,
+                    ));
+
+                    $donations[$donationId]->response_success = false;
+                    $donations[$donationId]->response_detail = $this->claimer->getDonationError($donationId);
+                    $donations[$donationId]->submission_correlation_id = $this->claimer->getLastCorrelationId();
+                    $this->sendToResultQueue($donations[$donationId]); // Let MatchBot record that there's an error.
+
+                    // Don't keep re-trying the donation – ack it to the inbound ClaimBot queue.
+                    $thisCharityAcks[$donationId]->ack(false);
+                    unset($thisCharityAcks[$donationId]);
+                }
+
+                $donationsToRetry = $this->claimer->getRemainingValidDonations();
+                if (count($donationsToRetry) === 0) {
+                    $this->logger->info(sprintf(
+                        'Stopping for org ref %s as there are no donations left to retry',
+                        $orgRef,
+                    ));
+                    continue;
+                }
+
+                $this->logger->info(sprintf(
+                    'Retrying %d remaining donations without errors...',
+                    count($donationsToRetry),
+                ));
+
+                try {
+                    $this->claimer->claim($donationsToRetry);
+
+                    // Success – for the remainder!
+                    $this->markSuccessful($donationsToRetry, $thisCharityAcks);
+
+                    $this->logger->info(sprintf(
+                        'Re-tried claim succeeded and %d donation messages acknowledged',
+                        count($donationsToRetry),
+                    ));
+                } catch (ClaimException $retryException) {
+                    $this->logger->error('Re-tried claim failed too. No more error detection.');
+
+                    foreach ($donationsToRetry as $donationId => $donation) {
+                        // Something unexpected is going on – probably most helpful to send all impacted
+                        // donations to the error queue so they can be easily investigated in MatchBot
+                        // DB.
+                        $donation->response_success = false;
+                        $this->sendToResultQueue($donation);
+                        $thisCharityAcks[$donationId]->nack($retryException);
+                    }
+                }
+            } catch (\Throwable $exception) {
+                // There is some other error – potentially an internal problem rather than one with donation data
+                // -> nack() all claim messages.
+                // Remaining exceptions *should* be ClaimException subclasses, but catch
+                // anything to be safe.
+                $this->logger->error(sprintf(
+                    'Claim failed with unexpected %s: %s',
+                    get_class($exception),
+                    $exception->getMessage(),
+                ));
+
+                foreach ($thisCharityAcks as $ack) {
+                    $ack->nack($exception);
+                }
             }
-        }
+
+            $this->logger->info(sprintf('Completed handling message for HMRC org ref %s', $orgRef));
+        } // Next charity
     }
 
     private function sendToResultQueue(Donation $donation): bool
@@ -229,8 +257,8 @@ class ClaimableDonationHandler implements BatchHandlerInterface
     /**
      * Sends success data to result queue, and positive ack's to original claims queue.
      *
-     * @param array $donations      Keyed on donation ID
-     * @param array $acknowledgers  Keyed on donation ID
+     * @param Donation[]        $donations Keyed on donation ID
+     * @param Acknowledger[]    $acknowledgers  Keyed on donation ID
      */
     private function markSuccessful(array $donations, array $acknowledgers): void
     {
@@ -238,9 +266,9 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         $responseMessage = $this->claimer->getLastResponseMessage();
 
         foreach ($donations as $donationId => $donation) {
-            $donation->submissionCorrelationId = $correlationId;
-            $donation->responseSuccess = true;
-            $donation->responseDetail = $responseMessage;
+            $donation->submission_correlation_id = $correlationId;
+            $donation->response_success = true;
+            $donation->response_detail = $responseMessage;
 
             $this->sendToResultQueue($donation);
 
@@ -255,5 +283,36 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                 ));
             }
         }
+    }
+
+    /**
+     * @param Acknowledger[]    $acks       Keyed on donation ID
+     * @param Donation[]        $donations  Keyed on donation ID
+     * @return array    2D with top level keys being unique HMRC org refs.
+     */
+    private function splitAcksByOrgRef(array $acks, array $donations): array
+    {
+        $groupedAcks = [];
+        foreach ($acks as $donationId => $acknowledger) {
+            $hmrcRef = $donations[$donationId]->org_hmrc_ref;
+            $groupedAcks[$hmrcRef][$donationId] = $acknowledger;
+        }
+
+        return $groupedAcks;
+    }
+
+    /**
+     * @param Donation[] $donations Keyed on donation ID
+     * @return array    2D with top level keys being unique HMRC org refs and 2nd level
+     *                  donation IDs.
+     */
+    private function splitDonationsByOrgRef(array $donations): array
+    {
+        $groupedDonations = [];
+        foreach ($donations as $donationId => $donation) {
+            $groupedDonations[$donation->org_hmrc_ref][$donationId] = $donation;
+        }
+
+        return $groupedDonations;
     }
 }

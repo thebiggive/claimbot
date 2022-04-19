@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e0a0fce2369f0a7d2974de2d8e88e627",
+    "content-hash": "bf51307e0167435e9e561d0c3aa585a1",
     "packages": [
         {
             "name": "async-aws/core",
@@ -183,16 +183,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.219.5",
+            "version": "3.220.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "7e8da5b45d545ca3129a14e972001698212b1a00"
+                "reference": "8beb098a2224742b2756e3b40a07593b1e6ff967"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/7e8da5b45d545ca3129a14e972001698212b1a00",
-                "reference": "7e8da5b45d545ca3129a14e972001698212b1a00",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/8beb098a2224742b2756e3b40a07593b1e6ff967",
+                "reference": "8beb098a2224742b2756e3b40a07593b1e6ff967",
                 "shasum": ""
             },
             "require": {
@@ -268,9 +268,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.219.5"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.220.0"
             },
-            "time": "2022-04-15T18:16:29+00:00"
+            "time": "2022-04-19T18:17:15+00:00"
         },
         {
             "name": "brick/postcode",
@@ -2701,16 +2701,16 @@
         },
         {
             "name": "thebiggive/hmrc-gift-aid",
-            "version": "v1.0.4",
+            "version": "dev-CLA-25-fix-agent-element",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thebiggive/hmrc-gift-aid.git",
-                "reference": "7b8671bad78a8eddbcce63292535c77f11a552f5"
+                "reference": "1d69489d342f63b8baf12094303ae3914f9e8739"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/7b8671bad78a8eddbcce63292535c77f11a552f5",
-                "reference": "7b8671bad78a8eddbcce63292535c77f11a552f5",
+                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/1d69489d342f63b8baf12094303ae3914f9e8739",
+                "reference": "1d69489d342f63b8baf12094303ae3914f9e8739",
                 "shasum": ""
             },
             "require": {
@@ -2733,7 +2733,14 @@
                     "GovTalk\\GiftAid\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "scripts": {
+                "lint:check": [
+                    "phpcs --standard=PSR2 src"
+                ],
+                "test": [
+                    "XDEBUG_MODE=coverage phpunit --coverage-text"
+                ]
+            },
             "license": [
                 "GPL-3.0-or-later"
             ],
@@ -2760,26 +2767,26 @@
             "description": "A library for charities and CASCs to claim Gift Aid (including Small Donations) from HMRC",
             "homepage": "https://github.com/thebiggive/hmrc-gift-aid",
             "support": {
-                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v1.0.4"
+                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/CLA-25-fix-agent-element"
             },
-            "time": "2022-04-04T16:37:31+00:00"
+            "time": "2022-04-19T18:37:49+00:00"
         },
         {
             "name": "thebiggive/messages",
-            "version": "v2.0.0",
+            "version": "v3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thebiggive/messages.git",
-                "reference": "5459200663ee16c305c8e1f5137651b5de0349f5"
+                "reference": "898f06b2d2c0f7c38b727f986738e0922f155b0f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thebiggive/messages/zipball/5459200663ee16c305c8e1f5137651b5de0349f5",
-                "reference": "5459200663ee16c305c8e1f5137651b5de0349f5",
+                "url": "https://api.github.com/repos/thebiggive/messages/zipball/898f06b2d2c0f7c38b727f986738e0922f155b0f",
+                "reference": "898f06b2d2c0f7c38b727f986738e0922f155b0f",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.0.2"
+                "php": "^8.0"
             },
             "type": "project",
             "autoload": {
@@ -2800,9 +2807,9 @@
             "description": "Shared message / model classes for cross-service communication",
             "support": {
                 "issues": "https://github.com/thebiggive/messages/issues",
-                "source": "https://github.com/thebiggive/messages/tree/v2.0.0"
+                "source": "https://github.com/thebiggive/messages/tree/v3.0.0"
             },
-            "time": "2022-04-02T12:27:43+00:00"
+            "time": "2022-04-19T17:53:32+00:00"
         },
         {
             "name": "thebiggive/php-govtalk",
@@ -5476,6 +5483,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "thebiggive/hmrc-gift-aid": 20,
         "roave/security-advisories": 20
     },
     "prefer-stable": true,

@@ -32,7 +32,7 @@ class Claimer
     }
 
     /**
-     * @param Donation[] $donations         Associactive, keyed on donation ID
+     * @param Donation[] $donations         Associative, keyed on donation ID. All with same 'org_hmrc_ref'.
      * @return bool                         True if the submission succeeded.
      * @throws DonationDataErrorsException  if at least one donation-specific error was returned
      * @throws HMRCRejectionException       if there is otherwise a specific XML format error from HMRC
@@ -55,6 +55,8 @@ class Claimer
                 $this->giftAid->addClaimingOrganisation(new ClaimingOrganisation(
                     $donation->org_name,
                     $donation->org_hmrc_ref,
+                    $donation->org_regulator,
+                    $donation->org_regulator_number,
                 ));
                 $orgHMRCRefsAdded[] = $donation->org_hmrc_ref;
             }
