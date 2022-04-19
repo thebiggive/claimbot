@@ -30,7 +30,7 @@ jobs:
 
       - run: composer run lint:check
 
-      - run: composer run test-with-coverage
+      - run: composer run test
 
       - codecov/upload:
           file: 'coverage.xml'
