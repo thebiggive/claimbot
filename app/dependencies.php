@@ -80,7 +80,9 @@ return function (ContainerBuilder $containerBuilder) {
                     ),
                     'country' => 'United Kingdom',
                 ],
-                null,
+                [
+                    'telephone' => getenv('HMRC_AGENT_PHONE'),
+                ],
                 // Outputs e.g. CBv1.1-2022-01-01. Max length for ClaimNo accepted by HMRC is 20 chars.
                 'CB' . $c->get(SettingsInterface::class)->get('version') . '-' . date('Y-m-d'),
             );

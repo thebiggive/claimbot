@@ -53,6 +53,8 @@ class TestCase extends PHPUnitTestCase
         $testDonation->amount = 123.45;
         $testDonation->org_hmrc_ref = 'AB12345';
         $testDonation->org_name = 'Test Charity';
+        $testDonation->org_regulator = 'CCEW';
+        $testDonation->org_regulator_number = '12233';
 
         return $testDonation;
     }

@@ -4,6 +4,9 @@
     <include>
       <directory suffix=".php">./src</directory>
     </include>
+    <report>
+      <clover outputFile="coverage.xml" />
+    </report>
   </coverage>
   <testsuites>
     <testsuite name="ClaimBot Tests">
