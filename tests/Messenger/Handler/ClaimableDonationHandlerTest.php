@@ -24,13 +24,13 @@ use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 
 class ClaimableDonationHandlerTest extends TestCase
 {
-    public function testSuccessFollowedByPollSuccess(): void
+    public function testSuccessFollowedByPollSuccessAndTwoDonationsToSameOrg(): void
     {
         $donationA = $this->getTestDonation();
         $donationB = clone $donationA;
         $donationB->id = 'efgh-5678';
         $donationB->house_no = '123 Main Very Long Named Named Named Named Named St';
-        $donationB->org_hmrc_ref = 'Cd12346'; // Lowercase to test auto-formatting
+        $donationB->postcode = 'IM1 1AA'; // Test crown dependency handling implicitly.
 
         $donations = [
             'abcd-1234' => $donationA,
@@ -38,7 +38,6 @@ class ClaimableDonationHandlerTest extends TestCase
         ];
 
         $donations['efgh-5678']->house_no = '123 Main Very Long Named Named Named Nam'; // truncated
-        $donations['efgh-5678']->org_hmrc_ref = 'CD12346'; // 'D' uppercased
 
         $claimerProphecy = $this->prophesize(Claimer::class);
         $claimerProphecy->claim($donations)->shouldBeCalledOnce()->willReturn(true);
@@ -55,14 +54,87 @@ class ClaimableDonationHandlerTest extends TestCase
             ->willReturn(2); // Just 2 messages per run for this test, so we get messages ack'd right away in 1 claim.
 
         $donationAWithOutcomeFieldsSet = clone $donationA;
-        $donationAWithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
-        $donationAWithOutcomeFieldsSet->responseSuccess = true;
-        $donationAWithOutcomeFieldsSet->responseDetail = 'all good';
+        $donationAWithOutcomeFieldsSet->submission_correlation_id = 'corrId';
+        $donationAWithOutcomeFieldsSet->response_success = true;
+        $donationAWithOutcomeFieldsSet->response_detail = 'all good';
 
         $donationBWithOutcomeFieldsSet = clone $donationB;
-        $donationBWithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
-        $donationBWithOutcomeFieldsSet->responseSuccess = true;
-        $donationBWithOutcomeFieldsSet->responseDetail = 'all good';
+        $donationBWithOutcomeFieldsSet->submission_correlation_id = 'corrId';
+        $donationBWithOutcomeFieldsSet->response_success = true;
+        $donationBWithOutcomeFieldsSet->response_detail = 'all good';
+
+        $donationAEnvelope = $this->getResultMessageEnvelope($donationAWithOutcomeFieldsSet);
+        $donationBEnvelope = $this->getResultMessageEnvelope($donationBWithOutcomeFieldsSet);
+
+        $outboundBusProphecy = $this->prophesize(OutboundMessageBus::class);
+        // https://github.com/phpspec/prophecy/issues/463#issuecomment-574123290
+        $outboundBusProphecy->dispatch($donationAEnvelope)
+            ->shouldBeCalledOnce()
+            ->willReturn($donationAEnvelope);
+        $outboundBusProphecy->dispatch($donationBEnvelope)
+            ->shouldBeCalledOnce()
+            ->willReturn($donationBEnvelope);
+
+        $container = $this->getContainer();
+        $container->set(Claimer::class, $claimerProphecy->reveal());
+        $container->set(OutboundMessageBus::class, $outboundBusProphecy->reveal());
+        $container->set(SettingsInterface::class, $settingsProphecy->reveal());
+
+        $handler = new ClaimableDonationHandler(
+            $container->get(Claimer::class),
+            $container->get(LoggerInterface::class),
+            $container->get(OutboundMessageBus::class),
+            $container->get(PostcodeFormatter::class),
+            $container->get(SettingsInterface::class),
+        );
+
+        // These return "The number of pending messages in the batch if $ack is not null".
+        $this->assertEquals(1, $handler->__invoke($donationA, $acknowledger));
+        $this->assertEquals(0, $handler->__invoke($donationB, $acknowledger));
+    }
+
+    public function testSuccessFollowedByPollSuccessAndTwoOrgs(): void
+    {
+        $donationA = $this->getTestDonation();
+        $donationB = clone $donationA;
+        $donationB->id = 'efgh-5678';
+        $donationB->house_no = '123 Main Very Long Named Named Named Named Named St';
+        $donationB->org_hmrc_ref = 'Cd12346'; // Lowercase to test auto-formatting
+
+        $donationsForClaim1 = [
+            'abcd-1234' => $donationA,
+        ];
+        $donationsForClaim2 = [
+            'efgh-5678' => $donationB,
+        ];
+
+        $donationsForClaim2['efgh-5678']->house_no = '123 Main Very Long Named Named Named Nam'; // truncated
+        $donationsForClaim2['efgh-5678']->org_hmrc_ref = 'CD12346'; // 'D' uppercased
+
+        $claimerProphecy = $this->prophesize(Claimer::class);
+        $claimerProphecy->claim($donationsForClaim1)->shouldBeCalledOnce()->willReturn(true);
+        $claimerProphecy->claim($donationsForClaim2)->shouldBeCalledOnce()->willReturn(true);
+        $claimerProphecy->getLastCorrelationId()->shouldBeCalledTimes(2)->willReturn('corrId');
+        $claimerProphecy->getLastResponseMessage()->shouldBeCalledTimes(2)->willReturn('all good');
+
+        $acknowledgerProphecy = $this->prophesize(Acknowledger::class);
+        $acknowledgerProphecy->ack(true)->shouldBeCalledTimes(2);
+        $acknowledger = $acknowledgerProphecy->reveal();
+
+        $settingsProphecy = $this->prophesize(SettingsInterface::class);
+        $settingsProphecy->get('current_batch_size')
+            ->shouldBeCalledOnce()
+            ->willReturn(2); // Just 2 messages per run for this test, so we get messages ack'd right away in 1 claim.
+
+        $donationAWithOutcomeFieldsSet = clone $donationA;
+        $donationAWithOutcomeFieldsSet->submission_correlation_id = 'corrId';
+        $donationAWithOutcomeFieldsSet->response_success = true;
+        $donationAWithOutcomeFieldsSet->response_detail = 'all good';
+
+        $donationBWithOutcomeFieldsSet = clone $donationB;
+        $donationBWithOutcomeFieldsSet->submission_correlation_id = 'corrId';
+        $donationBWithOutcomeFieldsSet->response_success = true;
+        $donationBWithOutcomeFieldsSet->response_detail = 'all good';
 
         $donationAEnvelope = $this->getResultMessageEnvelope($donationAWithOutcomeFieldsSet);
         $donationBEnvelope = $this->getResultMessageEnvelope($donationBWithOutcomeFieldsSet);
@@ -99,7 +171,6 @@ class ClaimableDonationHandlerTest extends TestCase
         $donationA = $this->getTestDonation();
         $donationB = clone $donationA;
         $donationB->id = 'efgh-5678';
-        $donationB->org_hmrc_ref = 'CD12346';
 
         $donations = [
             'abcd-1234' => $donationA,
@@ -126,14 +197,14 @@ class ClaimableDonationHandlerTest extends TestCase
             ->willReturn(2); // Just 2 messages per run for this test, so we get messages ack'd right away in 1 claim.
 
         $donationAWithOutcomeFieldsSet = clone $donationA;
-        $donationAWithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
-        $donationAWithOutcomeFieldsSet->responseSuccess = true;
-        $donationAWithOutcomeFieldsSet->responseDetail = 'all good';
+        $donationAWithOutcomeFieldsSet->submission_correlation_id = 'corrId';
+        $donationAWithOutcomeFieldsSet->response_success = true;
+        $donationAWithOutcomeFieldsSet->response_detail = 'all good';
 
         $donationBWithOutcomeFieldsSet = clone $donationB;
-        $donationBWithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
-        $donationBWithOutcomeFieldsSet->responseSuccess = true;
-        $donationBWithOutcomeFieldsSet->responseDetail = 'all good';
+        $donationBWithOutcomeFieldsSet->submission_correlation_id = 'corrId';
+        $donationBWithOutcomeFieldsSet->response_success = true;
+        $donationBWithOutcomeFieldsSet->response_detail = 'all good';
 
         $donationAEnvelope = $this->getResultMessageEnvelope($donationAWithOutcomeFieldsSet);
         $donationBEnvelope = $this->getResultMessageEnvelope($donationBWithOutcomeFieldsSet);
@@ -175,7 +246,6 @@ class ClaimableDonationHandlerTest extends TestCase
         // Donation B has an invalid postcode for the GB foramtter.
         $donationB = clone $donationA;
         $donationB->id = 'efgh-5678';
-        $donationB->org_hmrc_ref = 'CD12346';
         $donationB->postcode = 'N1AA';
 
         $donationsFull = [
@@ -199,12 +269,12 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledger = $acknowledgerProphecy->reveal();
 
         $donationAWithOutcomeFieldsSet = clone $donationA;
-        $donationAWithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
-        $donationAWithOutcomeFieldsSet->responseSuccess = true;
-        $donationAWithOutcomeFieldsSet->responseDetail = 'all good with the remaining one';
+        $donationAWithOutcomeFieldsSet->submission_correlation_id = 'corrId';
+        $donationAWithOutcomeFieldsSet->response_success = true;
+        $donationAWithOutcomeFieldsSet->response_detail = 'all good with the remaining one';
 
         $donationBWithOutcomeFieldsSet = clone $donationB;
-        $donationBWithOutcomeFieldsSet->responseSuccess = false;
+        $donationBWithOutcomeFieldsSet->response_success = false;
 
         $donationAEnvelope = $this->getResultMessageEnvelope($donationAWithOutcomeFieldsSet);
         $donationBEnvelope = $this->getResultMessageEnvelope($donationBWithOutcomeFieldsSet);
@@ -361,14 +431,14 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledger2 = $acknowledger2Prophecy->reveal();
 
         $donation1WithOutcomeFieldsSet = clone $donation1;
-        $donation1WithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
-        $donation1WithOutcomeFieldsSet->responseSuccess = false;
-        $donation1WithOutcomeFieldsSet->responseDetail = "Invalid content found at element 'Sur'";
+        $donation1WithOutcomeFieldsSet->submission_correlation_id = 'corrId';
+        $donation1WithOutcomeFieldsSet->response_success = false;
+        $donation1WithOutcomeFieldsSet->response_detail = "Invalid content found at element 'Sur'";
 
         $donation2WithOutcomeFieldsSet = clone $donation2;
-        $donation2WithOutcomeFieldsSet->submissionCorrelationId = 'corrId';
-        $donation2WithOutcomeFieldsSet->responseSuccess = true;
-        $donation2WithOutcomeFieldsSet->responseDetail = 'all good with the remaining one';
+        $donation2WithOutcomeFieldsSet->submission_correlation_id = 'corrId';
+        $donation2WithOutcomeFieldsSet->response_success = true;
+        $donation2WithOutcomeFieldsSet->response_detail = 'all good with the remaining one';
 
         $donation1Envelope = $this->getResultMessageEnvelope($donation1WithOutcomeFieldsSet);
         $donation2Envelope = $this->getResultMessageEnvelope($donation2WithOutcomeFieldsSet);
