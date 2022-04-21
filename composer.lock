@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "877a82c18792345c9e059ecfeb412cd5",
+    "content-hash": "ab2fd123fe774e4682ab63ddc3d2388b",
     "packages": [
         {
             "name": "async-aws/core",
@@ -183,16 +183,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.220.0",
+            "version": "3.220.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "8beb098a2224742b2756e3b40a07593b1e6ff967"
+                "reference": "1436b69a1e2e8005cc867feb021455ab0a26a30f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/8beb098a2224742b2756e3b40a07593b1e6ff967",
-                "reference": "8beb098a2224742b2756e3b40a07593b1e6ff967",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/1436b69a1e2e8005cc867feb021455ab0a26a30f",
+                "reference": "1436b69a1e2e8005cc867feb021455ab0a26a30f",
                 "shasum": ""
             },
             "require": {
@@ -268,9 +268,9 @@
             "support": {
                 "forum": "https://forums.aws.amazon.com/forum.jspa?forumID=80",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.220.0"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.220.1"
             },
-            "time": "2022-04-19T18:17:15+00:00"
+            "time": "2022-04-20T18:15:52+00:00"
         },
         {
             "name": "brick/postcode",
@@ -2701,16 +2701,16 @@
         },
         {
             "name": "thebiggive/hmrc-gift-aid",
-            "version": "v2.0.0",
+            "version": "v2.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thebiggive/hmrc-gift-aid.git",
-                "reference": "b932c2eb73eefc424edf4e6ae160207a3da9940b"
+                "reference": "6382552e97e57bfc26d524f0e8db6b7756321c6d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/b932c2eb73eefc424edf4e6ae160207a3da9940b",
-                "reference": "b932c2eb73eefc424edf4e6ae160207a3da9940b",
+                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/6382552e97e57bfc26d524f0e8db6b7756321c6d",
+                "reference": "6382552e97e57bfc26d524f0e8db6b7756321c6d",
                 "shasum": ""
             },
             "require": {
@@ -2760,9 +2760,9 @@
             "description": "A library for charities and CASCs to claim Gift Aid (including Small Donations) from HMRC",
             "homepage": "https://github.com/thebiggive/hmrc-gift-aid",
             "support": {
-                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v2.0.0"
+                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v2.0.1"
             },
-            "time": "2022-04-19T20:14:44+00:00"
+            "time": "2022-04-21T12:03:18+00:00"
         },
         {
             "name": "thebiggive/messages",
