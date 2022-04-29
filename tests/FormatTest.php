@@ -37,4 +37,20 @@ class FormatTest extends TestCase
     {
         $this->assertEquals('', Format::formatCrownDependencyPseudoPostcode('N1 1AA'));
     }
+
+    public function testAgentAddressPartsSplitFromEnvVar(): void
+    {
+        $weirdlyFormattedAddress = str_replace(' ', '\\s', 'Dragon Court,Macklin Street,London,WC2B 5LX');
+
+        $agentAddress = Format::agentAddressFromEnvVar($weirdlyFormattedAddress);
+
+        $this->assertCount(3, $agentAddress);
+        $this->assertArrayHasKey('line', $agentAddress);
+        $this->assertArrayHasKey('postcode', $agentAddress);
+        $this->assertArrayHasKey('country', $agentAddress);
+
+        $this->assertCount(3, $agentAddress['line']);
+        $this->assertEquals('WC2B 5LX', $agentAddress['postcode']);
+        $this->assertEquals('United Kingdom', $agentAddress['country']);
+    }
 }
