@@ -40,16 +40,25 @@ In the **ClaimBot** project folder:
 
 As you can see in [`composer.json`](./composer.json)'s `scripts`, the `messenger:consume`
 PHP app command is used, which is built into Symfony Messenger. This means no complexity
-from maintaining or unit testing our own Command. We rely on the `BatchHandlerInterface`
-added in Messenger v5.4 to process batches of 50 donations in non-unit-test environments.
+from maintaining or unit testing our own Command. We process batches of up to 1,000 donations
+per claim in non-unit-test environments.
 
 ## Service dependency notes
 
 ### Queues and locking
 
-Because the live SQS queues are FIFO they guarantee at-most-once delivery of a given message.
-So even if something unexpected happened it should not be possible for the same messages to
-be double-claimed. For this reason and to benefit from the simplicity of using Symfony
+The timing of live tasks' schedules in the `infrastructure` repository, and choice of
+`--time-limit` in this repo's `composer.json` task, should be designed to avoid overlap
+of consumers.
+
+However we also dynamically append a `&consumer` to the DSN in `settings.messenger.inbound_dsn`
+to reduce the [risk of double consumes](https://symfony.com/doc/current/messenger.html#redis-transport).
+
+This hopefully makes the Redis approach reasonably safe, while avoiding the limitations
+of SQS FIFO queues which meant we could not process batches of more than 10 donations using
+Messenger's `BatchHandlerInterface`.
+
+Given the above risk mitigations and to benefit from the simplicity of using Symfony
 Messenger's `:consume` command directly instead of writing our own, we don't have explicit
 run-once locks via Symfony Lock or similar in this app.
 

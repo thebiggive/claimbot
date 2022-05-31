@@ -15,12 +15,4 @@ class SettingsTest extends TestCase
 
         $this->assertEquals(['foo' => 'bar'], $settings->get('dummy_setting'));
     }
-
-    public function testSetCurrentBatchSize(): void
-    {
-        $settings = new Settings([]);
-        $settings->setCurrentBatchSize(4);
-
-        $this->assertEquals(4, $settings->get('current_batch_size'));
-    }
 }
