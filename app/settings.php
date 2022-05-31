@@ -16,7 +16,7 @@ return function (ContainerBuilder $containerBuilder) {
                 'logger' => [
                     'name' => 'claimbot',
                     'path' => 'php://stdout',
-                    'level' => Logger::DEBUG,
+                    'level' => getenv('APP_ENV') === 'local' ? Logger::DEBUG : Logger::INFO,
                     'cloudwatch' => [
                         'key' => getenv('AWS_LOGS_ACCESS_KEY_ID'),
                         'secret' => getenv('AWS_LOGS_SECRET_ACCESS_KEY'),
