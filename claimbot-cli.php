@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 use ClaimBot\Claimer;
 use ClaimBot\Commands\Poll;
-use ClaimBot\Settings\Settings;
 use ClaimBot\Settings\SettingsInterface;
 use DI\Container;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Application;
 use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\Messenger\Bridge\AmazonSqs\Transport\AmazonSqsTransport;
 use Symfony\Component\Messenger\Command\ConsumeMessagesCommand;
 use Symfony\Component\Messenger\RoutableMessageBus;
 use Symfony\Component\Messenger\Transport\TransportInterface;

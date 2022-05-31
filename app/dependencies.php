@@ -160,10 +160,7 @@ return static function (ContainerBuilder $containerBuilder) {
 
         // Incoming messages are new donations to claim on.
         TransportInterface::class => static function (ContainerInterface $c): TransportInterface {
-            $transportFactory = new TransportFactory([
-                new AmazonSqsTransportFactory(),
-                new RedisTransportFactory(),
-            ]);
+            $transportFactory = new RedisTransportFactory();
             return $transportFactory->createTransport(
                 $c->get(SettingsInterface::class)->get('messenger')['inbound_dsn'],
                 [],
