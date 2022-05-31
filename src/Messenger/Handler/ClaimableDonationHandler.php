@@ -41,7 +41,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         private PostcodeFormatter $postcodeFormatter,
         SettingsInterface $settings,
     ) {
-        $this->batchSize = $settings->get('current_batch_size');
+        $this->batchSize = $settings->get('max_batch_size');
     }
 
     public function __invoke(Donation $message, Acknowledger $ack = null)

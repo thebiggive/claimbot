@@ -23,7 +23,17 @@ return function (ContainerBuilder $containerBuilder) {
                         'region' => getenv('AWS_LOGS_REGION'),
                     ],
                 ],
-                'max_batch_size' => 50, // When using SQS we may use fewer.
+                'max_batch_size' => 1000, // Claims may contain fewer depending on queue timings etc.
+                'messenger' => [
+                    // "There should never be more than one messenger:consume command running with the same combination
+                    // of stream, group and consumer, or messages could end up being handled more than once."
+                    // https://symfony.com/doc/current/messenger.html#redis-transport
+                    // Inbound uses Redis in all environments.
+                    'inbound_dsn' =>
+                        getenv('MESSENGER_INCOMING_TRANSPORT_DSN') . '&consumer=' . uniqid('claimbot-', true),
+                    // Outbound uses SQS in deployed AWS environments and Redis locally.
+                    'outbound_dsn' => getenv('MESSENGER_OUTBOUND_TRANSPORT_DSN'),
+                ],
                 'version' => getenv('APP_VERSION'),
             ]);
         }

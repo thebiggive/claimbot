@@ -49,7 +49,7 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledger = $acknowledgerProphecy->reveal();
 
         $settingsProphecy = $this->prophesize(SettingsInterface::class);
-        $settingsProphecy->get('current_batch_size')
+        $settingsProphecy->get('max_batch_size')
             ->shouldBeCalledOnce()
             ->willReturn(2); // Just 2 messages per run for this test, so we get messages ack'd right away in 1 claim.
 
@@ -122,9 +122,9 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledger = $acknowledgerProphecy->reveal();
 
         $settingsProphecy = $this->prophesize(SettingsInterface::class);
-        $settingsProphecy->get('current_batch_size')
+        $settingsProphecy->get('max_batch_size')
             ->shouldBeCalledOnce()
-            ->willReturn(2); // Just 2 messages per run for this test, so we get messages ack'd right away in 1 claim.
+            ->willReturn(2); // Just 2 messages per run for this test. Messages are ack'd right away over 2 claims.
 
         $donationAWithOutcomeFieldsSet = clone $donationA;
         $donationAWithOutcomeFieldsSet->submission_correlation_id = 'corrId';
@@ -192,7 +192,7 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledger = $acknowledgerProphecy->reveal();
 
         $settingsProphecy = $this->prophesize(SettingsInterface::class);
-        $settingsProphecy->get('current_batch_size')
+        $settingsProphecy->get('max_batch_size')
             ->shouldBeCalledOnce()
             ->willReturn(2); // Just 2 messages per run for this test, so we get messages ack'd right away in 1 claim.
 
@@ -289,7 +289,7 @@ class ClaimableDonationHandlerTest extends TestCase
             ->willReturn($donationBEnvelope);
 
         $settingsProphecy = $this->prophesize(SettingsInterface::class);
-        $settingsProphecy->get('current_batch_size')
+        $settingsProphecy->get('max_batch_size')
             ->shouldBeCalledOnce()
             ->willReturn(2); // Just 2 messages per run for this test, so we get messages ack'd right away in 1 claim.
 
@@ -352,7 +352,7 @@ class ClaimableDonationHandlerTest extends TestCase
             ->willReturn($failMessageEnvelope);
 
         $settingsProphecy = $this->prophesize(SettingsInterface::class);
-        $settingsProphecy->get('current_batch_size')
+        $settingsProphecy->get('max_batch_size')
             ->shouldBeCalledOnce()
             ->willReturn(1); // Send claim after just 1 message.
 
@@ -453,7 +453,7 @@ class ClaimableDonationHandlerTest extends TestCase
             ->willReturn($donation2Envelope);
 
         $settingsProphecy = $this->prophesize(SettingsInterface::class);
-        $settingsProphecy->get('current_batch_size')
+        $settingsProphecy->get('max_batch_size')
             ->shouldBeCalledOnce()
             ->willReturn(2);
 
@@ -540,7 +540,7 @@ class ClaimableDonationHandlerTest extends TestCase
             ->willReturn($failMessageEnvelope2);
 
         $settingsProphecy = $this->prophesize(SettingsInterface::class);
-        $settingsProphecy->get('current_batch_size')
+        $settingsProphecy->get('max_batch_size')
             ->shouldBeCalledOnce()
             ->willReturn(2);
 
@@ -605,7 +605,7 @@ class ClaimableDonationHandlerTest extends TestCase
             ->willThrow($transportException);
 
         $settingsProphecy = $this->prophesize(SettingsInterface::class);
-        $settingsProphecy->get('current_batch_size')
+        $settingsProphecy->get('max_batch_size')
             ->shouldBeCalledOnce()
             ->willReturn(1); // Send claim after just 1 message.
 
@@ -637,7 +637,7 @@ class ClaimableDonationHandlerTest extends TestCase
         $acknowledger = $acknowledgerProphecy->reveal();
 
         $settingsProphecy = $this->prophesize(SettingsInterface::class);
-        $settingsProphecy->get('current_batch_size')
+        $settingsProphecy->get('max_batch_size')
             ->shouldBeCalledOnce()
             ->willReturn(1); // Send claim after just 1 message.
 

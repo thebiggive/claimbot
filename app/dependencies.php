@@ -32,7 +32,7 @@ use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
 use Symfony\Component\Messenger\Transport\TransportFactory;
 use Symfony\Component\Messenger\Transport\TransportInterface;
 
-return function (ContainerBuilder $containerBuilder) {
+return static function (ContainerBuilder $containerBuilder) {
     $containerBuilder->addDefinitions([
         Claimer::class => function (ContainerInterface $c) {
             return new Claimer($c->get(GiftAid::class), $c->get(LoggerInterface::class));
@@ -131,7 +131,7 @@ return function (ContainerBuilder $containerBuilder) {
             ]);
         },
 
-        PostcodeFormatter::class => static function (ContainerInterface $c): PostcodeFormatter {
+        PostcodeFormatter::class => static function (): PostcodeFormatter {
             return new PostcodeFormatter();
         },
 
@@ -152,7 +152,7 @@ return function (ContainerBuilder $containerBuilder) {
                 new RedisTransportFactory(),
             ]);
             return $transportFactory->createTransport(
-                getenv('MESSENGER_OUTBOUND_TRANSPORT_DSN'),
+                $c->get(SettingsInterface::class)->get('messenger')['outbound_dsn'],
                 [],
                 new PhpSerializer(),
             );
@@ -165,7 +165,7 @@ return function (ContainerBuilder $containerBuilder) {
                 new RedisTransportFactory(),
             ]);
             return $transportFactory->createTransport(
-                getenv('MESSENGER_INCOMING_TRANSPORT_DSN'),
+                $c->get(SettingsInterface::class)->get('messenger')['inbound_dsn'],
                 [],
                 new PhpSerializer(),
             );
