@@ -14,7 +14,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Send applicable donations to ClaimBot for HMRC Gift Aid claims.
+ * Polls HMRC for status of a request with the given correlation ID.
  */
 class Poll extends Command
 {

@@ -7,7 +7,7 @@ namespace ClaimBot\Messenger;
 use Symfony\Component\Messenger\MessageBus;
 
 /**
- * A bus for delivering errors back out to SQS. This needs to be distinct from the `MessageBusInterface::class`
+ * A bus for delivering results back out to SQS. This needs to be distinct from the `MessageBusInterface::class`
  * definition in DI so that we can make it available to {@see \ClaimBot\Messenger\Handler\ClaimableDonationHandler}
  * without setting up a circular dependency chain.
  */

@@ -29,7 +29,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
     use BatchHandlerTrait;
 
     /**
-     * @var int Set once based on SQS message count or fallback maximum batch size, at initial run time. No need to
+     * @var int Set once based on maximum batch size from `$settings`. No need to
      *          re-check on every {@see ClaimableDonationHandler::shouldFlush()} check.
      */
     private int $batchSize;
@@ -41,7 +41,7 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         private PostcodeFormatter $postcodeFormatter,
         SettingsInterface $settings,
     ) {
-        $this->batchSize = $settings->get('current_batch_size');
+        $this->batchSize = $settings->get('max_batch_size');
     }
 
     public function __invoke(Donation $message, Acknowledger $ack = null)

@@ -17,9 +17,4 @@ class Settings implements SettingsInterface
     {
         return (empty($key)) ? $this->settings : $this->settings[$key];
     }
-
-    public function setCurrentBatchSize(int $batchSize): void
-    {
-        $this->settings['current_batch_size'] = $batchSize;
-    }
 }
