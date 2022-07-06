@@ -113,12 +113,12 @@ class ClaimableDonationHandler implements BatchHandlerInterface
                     $this->logger->info(sprintf(
                         'Claim sent and %d donation messages acknowledged',
                         // The number sent to HMRC, not necessarily the number we started with.
-                        count($donations),
+                        count($thisCharityAcks),
                     ));
                 } else {
                     $this->logger->warning(sprintf(
-                        "Claim sent and %d donation messages ack'd, but poll timed out",
-                        count($donations),
+                        "Claim sent and %d donation messages acknowledged, but poll timed out",
+                        count($thisCharityAcks),
                     ));
                 }
             } catch (DonationDataErrorsException $donationDataErrorsException) {
