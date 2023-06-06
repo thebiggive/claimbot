@@ -257,6 +257,9 @@ class ClaimableDonationHandler implements BatchHandlerInterface
         // We've seen HMRC reject claims with lowercase letters.
         $donation->org_hmrc_ref = strtoupper($donation->org_hmrc_ref);
 
+        $donation->first_name = mb_substr($donation->first_name, 0, 35);
+        $donation->last_name = mb_substr($donation->last_name, 0, 35);
+
         // HMRC reject claims with "Invalid content found at element 'House'" if too large.
         $donation->house_no = mb_substr($donation->house_no, 0, 40);
 
