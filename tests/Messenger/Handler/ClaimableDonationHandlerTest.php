@@ -29,18 +29,20 @@ class ClaimableDonationHandlerTest extends TestCase
         $donationA = $this->getTestDonation();
         $donationB = clone $donationA;
         $donationB->id = 'efgh-5678';
+        $donationB->last_name = 'Unusually-long-name Unusually-long-name Unusually-long-name X';
         $donationB->house_no = '123 Main Very Long Named Named Named Named Named St';
         $donationB->postcode = 'IM1 1AA'; // Test crown dependency handling implicitly.
 
-        $donations = [
+        $expectedDonations = [
             'abcd-1234' => $donationA,
             'efgh-5678' => $donationB,
         ];
 
-        $donations['efgh-5678']->house_no = '123 Main Very Long Named Named Named Nam'; // truncated
+        $expectedDonations['efgh-5678']->last_name = 'Unusually-long-name Unusually-long-'; // truncated
+        $expectedDonations['efgh-5678']->house_no = '123 Main Very Long Named Named Named Nam'; // truncated
 
         $claimerProphecy = $this->prophesize(Claimer::class);
-        $claimerProphecy->claim($donations)->shouldBeCalledOnce()->willReturn(true);
+        $claimerProphecy->claim($expectedDonations)->shouldBeCalledOnce()->willReturn(true);
         $claimerProphecy->getLastCorrelationId()->shouldBeCalledOnce()->willReturn('corrId');
         $claimerProphecy->getLastResponseMessage()->shouldBeCalledOnce()->willReturn('all good');
 
