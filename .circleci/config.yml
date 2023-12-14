@@ -9,7 +9,7 @@ orbs:
 jobs:
   test: # Also lints first
     docker:
-      - image: thebiggive/php:dev-8.1
+      - image: thebiggive/php:dev-8.2
         auth:
           username: $DOCKER_HUB_USERNAME
           password: $DOCKER_HUB_ACCESS_TOKEN
@@ -22,6 +22,8 @@ jobs:
             - composer-v1-{{ checksum "composer.lock" }}
 
       - run: composer install --no-interaction
+
+      - run: composer check-platform-reqs
 
       - save_cache:
           paths:
