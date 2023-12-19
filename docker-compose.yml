@@ -19,7 +19,7 @@ services:
 #      - redis
 
 #  redis:
-#    image: redis:5.0
+#    image: redis:7.1
 #    networks:
 #      - matchbot
 
