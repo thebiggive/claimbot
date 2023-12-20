@@ -5,7 +5,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
         "ext-redis": "*",
         "brick/postcode": "^0.2.6",
         "maxbanton/cwh": "^2.0",
@@ -16,7 +16,7 @@
         "symfony/event-dispatcher": "^6.1",
         "symfony/messenger": "^6.1",
         "symfony/redis-messenger": "^6.1",
-        "thebiggive/hmrc-gift-aid": "^2.0.1",
+        "thebiggive/hmrc-gift-aid": "^2.0.2",
         "thebiggive/messages": "^3.0"
     },
     "require-dev": {
@@ -28,7 +28,7 @@
     "config": {
         "optimize-autoloader": true,
         "platform": {
-            "php": "8.1.6"
+            "php": "8.2.13"
         },
         "sort-packages": true
     },

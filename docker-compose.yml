@@ -6,7 +6,7 @@ volumes:
 
 services:
   consumer:
-    image: thebiggive/php:dev-8.1
+    image: thebiggive/php:dev-8.2
     command: composer run messenger:consume
     volumes:
       - .:/var/www/html
@@ -19,7 +19,7 @@ services:
 #      - redis
 
 #  redis:
-#    image: redis:5.0
+#    image: redis:7.1
 #    networks:
 #      - matchbot
 

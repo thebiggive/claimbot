@@ -1,4 +1,4 @@
-FROM thebiggive/php:8.1
+FROM thebiggive/php:8.2
 
 # Install the AWS CLI - needed to load in secrets safely from S3. See https://aws.amazon.com/blogs/security/how-to-manage-secrets-for-amazon-ec2-container-service-based-applications-by-using-amazon-s3-and-docker/
 RUN apt-get update -qq && apt-get install -y awscli && \
