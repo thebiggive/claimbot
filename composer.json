@@ -5,7 +5,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "ext-redis": "*",
         "brick/postcode": "^0.2.6",
         "maxbanton/cwh": "^2.0",
@@ -28,7 +28,7 @@
     "config": {
         "optimize-autoloader": true,
         "platform": {
-            "php": "8.2.13"
+            "php": "8.3.1"
         },
         "sort-packages": true
     },
