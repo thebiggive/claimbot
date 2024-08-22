@@ -45,7 +45,7 @@ workflows:
           context:
             - docker-hub-creds
             - jira
-            - slack-new-webhooks
+            - slack
           post-steps:
             - jira/notify:
                 pipeline_id: << pipeline.id >>
@@ -66,12 +66,12 @@ workflows:
           context:
             - docker-hub-creds
             - jira
-            - slack-new-webhooks
+            - slack
       - aws-ecr/build_and_push_image:
           context:
             - ecs-deploys
             - jira
-            - slack-new-webhooks
+            - slack
           requires:
             - test
           account_id: ${AWS_ECR_REGISTRY_ID}
@@ -116,12 +116,12 @@ workflows:
           context:
             - docker-hub-creds
             - jira
-            - slack-new-webhooks
+            - slack
       - aws-ecr/build_and_push_image:
           context:
             - ecs-deploys
             - jira
-            - slack-new-webhooks
+            - slack
           requires:
             - test
           account_id: ${AWS_ECR_REGISTRY_ID}
@@ -168,12 +168,12 @@ workflows:
           context:
             - docker-hub-creds
             - jira
-            - slack-new-webhooks
+            - slack
       - aws-ecr/build_and_push_image:
           context:
             - ecs-deploys
             - jira
-            - slack-new-webhooks
+            - slack
           requires:
             - test
           account_id: ${AWS_ECR_REGISTRY_ID}
