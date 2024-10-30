@@ -36,8 +36,7 @@
     "autoload": {
         "psr-4": {
             "ClaimBot\\": "src/"
-        },
-        "files": ["MessageId.php"]
+        }
     },
     "autoload-dev": {
         "psr-4": {
