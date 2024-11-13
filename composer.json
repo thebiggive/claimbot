@@ -11,14 +11,13 @@
         "maxbanton/cwh": "^2.0",
         "monolog/monolog": "^2.6",
         "php-di/php-di": "^6.4",
-        "ramsey/uuid": "^4.7",
         "symfony/amazon-sqs-messenger": "^6.1",
         "symfony/console": "^6.1",
         "symfony/event-dispatcher": "^6.1",
-        "symfony/messenger": "^6.1",
+        "symfony/messenger": "^7.1",
         "symfony/redis-messenger": "^6.1",
         "thebiggive/hmrc-gift-aid": "^2.0.2",
-        "thebiggive/messages": "^3.0"
+        "thebiggive/messages": "^3.1"
     },
     "require-dev": {
         "phpspec/prophecy-phpunit": "^2.0",
@@ -36,8 +35,7 @@
     "autoload": {
         "psr-4": {
             "ClaimBot\\": "src/"
-        },
-        "files": ["MessageId.php"]
+        }
     },
     "autoload-dev": {
         "psr-4": {
