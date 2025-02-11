@@ -165,11 +165,13 @@ class Claimer
     }
 
     /**
-     * HMRC r68 schema docs say `OrgName` overall must have pattern `[a-zA-Z0-9].*`
+     * HMRC r68 schema docs say `OrgName` overall must have pattern `[a-zA-Z0-9].*`.
+     * So far we provide an exception for names starting '@ '... only, by trimming that
+     * part of the name.
      */
     private function sanitiseOrgName(string $orgName): string
     {
-        return preg_replace('/^[^a-zA-Z0-9]+/', '', $orgName);
+        return preg_replace('/^@\s+/', '', $orgName);
     }
 
     private function handleErrors(array $errors): void
