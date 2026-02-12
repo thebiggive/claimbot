@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3b699d4d8ba3c67cb349f1c18d00e1df",
+    "content-hash": "552184a386f2da8ba2e019122fe874a4",
     "packages": [
         {
             "name": "async-aws/core",
@@ -3243,16 +3243,16 @@
         },
         {
             "name": "thebiggive/hmrc-gift-aid",
-            "version": "v2.0.2",
+            "version": "v2.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thebiggive/hmrc-gift-aid.git",
-                "reference": "2cb7d49e989ada2de4337491ea15a9f88cb7d5ed"
+                "reference": "ea6cacca9397b345310ce45c07ce821a0531564f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/2cb7d49e989ada2de4337491ea15a9f88cb7d5ed",
-                "reference": "2cb7d49e989ada2de4337491ea15a9f88cb7d5ed",
+                "url": "https://api.github.com/repos/thebiggive/hmrc-gift-aid/zipball/ea6cacca9397b345310ce45c07ce821a0531564f",
+                "reference": "ea6cacca9397b345310ce45c07ce821a0531564f",
                 "shasum": ""
             },
             "require": {
@@ -3303,9 +3303,9 @@
             "description": "A library for charities and CASCs to claim Gift Aid (including Small Donations) from HMRC",
             "homepage": "https://github.com/thebiggive/hmrc-gift-aid",
             "support": {
-                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v2.0.2"
+                "source": "https://github.com/thebiggive/hmrc-gift-aid/tree/v2.0.3"
             },
-            "time": "2023-06-29T14:19:31+00:00"
+            "time": "2026-02-12T16:39:29+00:00"
         },
         {
             "name": "thebiggive/messages",
@@ -6596,5 +6596,5 @@
     "platform-overrides": {
         "php": "8.3.1"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
