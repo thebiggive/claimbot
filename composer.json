@@ -16,7 +16,7 @@
         "symfony/event-dispatcher": "^6.1",
         "symfony/messenger": "^7.1",
         "symfony/redis-messenger": "^6.1",
-        "thebiggive/hmrc-gift-aid": "^2.0.2",
+        "thebiggive/hmrc-gift-aid": "^2.0.3",
         "thebiggive/messages": "^3.1"
     },
     "require-dev": {
