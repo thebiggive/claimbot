@@ -6,7 +6,7 @@ volumes:
 
 services:
   consumer:
-    image: thebiggive/php:dev-8.3
+    image: thebiggive/php:dev-8.5
     command: composer run messenger:consume
     volumes:
       - .:/var/www/html
