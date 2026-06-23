@@ -8,6 +8,7 @@
         "php": "^8.5",
         "ext-redis": "*",
         "brick/postcode": "^0.2.6",
+        "guzzlehttp/guzzle": "^7.12.2",
         "maxbanton/cwh": "^2.0",
         "monolog/monolog": "^2.6",
         "php-di/php-di": "^7.0",
