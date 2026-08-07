@@ -8,6 +8,7 @@ use ClaimBot\Claimer;
 use ClaimBot\Exception\ClaimException;
 use ClaimBot\Settings\SettingsInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,10 +17,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Polls HMRC for status of a request with the given correlation ID.
  */
+#[AsCommand(
+    name: 'claimbot:poll',
+    description: 'Polls for status of a request with the given correlation ID'
+)]
 class Poll extends Command
 {
-    protected static $defaultName = 'claimbot:poll';
-
     public function __construct(
         private Claimer $claimer,
         private LoggerInterface $logger,
@@ -30,7 +33,6 @@ class Poll extends Command
 
     protected function configure(): void
     {
-        $this->setDescription('Polls for status of a request with the given correlation ID');
         $this->addArgument(
             'correlationId',
             InputArgument::REQUIRED,

@@ -39,8 +39,8 @@ $pollCommand = new Poll(
     $psr11App->get(SettingsInterface::class),
 );
 
-$cliApp->add($consumeCommand);
-$cliApp->add($pollCommand);
+$cliApp->addCommand($consumeCommand);
+$cliApp->addCommand($pollCommand);
 $cliApp->run();
 
 /**
