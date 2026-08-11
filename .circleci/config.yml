@@ -80,8 +80,8 @@ workflows:
           tag: 'regression,regression-${CIRCLE_SHA1}'
           auth:
             - aws-cli/setup:
-                aws_access_key_id: AWS_ACCESS_KEY_ID
-                aws_secret_access_key: AWS_SECRET_ACCESS_KEY
+                role_arn: ${AWS_ROLE_ARN}
+                region: ${AWS_REGION}
           post-steps:
             - slack/notify:
                 event: fail
@@ -130,8 +130,8 @@ workflows:
           tag: 'staging,staging-${CIRCLE_SHA1}'
           auth:
             - aws-cli/setup:
-                aws_access_key_id: AWS_ACCESS_KEY_ID
-                aws_secret_access_key: AWS_SECRET_ACCESS_KEY
+                role_arn: ${AWS_ROLE_ARN}
+                region: ${AWS_REGION}
           post-steps:
             - slack/notify:
                 event: fail
@@ -182,8 +182,8 @@ workflows:
           tag: 'production,production-${CIRCLE_SHA1}'
           auth:
             - aws-cli/setup:
-                aws_access_key_id: AWS_ACCESS_KEY_ID
-                aws_secret_access_key: AWS_SECRET_ACCESS_KEY
+                role_arn: ${AWS_ROLE_ARN}
+                region: ${AWS_REGION}
           post-steps:
             - slack/notify:
                 event: fail
