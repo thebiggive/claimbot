@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  aws-cli: circleci/aws-cli@5.0.0
+  aws-cli: circleci/aws-cli@5.4.2
   aws-ecr: circleci/aws-ecr@9.3.1
   codecov: codecov/codecov@4.1.0
   jira: circleci/jira@2.1.0
@@ -80,8 +80,8 @@ workflows:
           tag: 'regression,regression-${CIRCLE_SHA1}'
           auth:
             - aws-cli/setup:
-                aws_access_key_id: AWS_ACCESS_KEY_ID
-                aws_secret_access_key: AWS_SECRET_ACCESS_KEY
+                role_arn: ${AWS_ROLE_ARN}
+                region: ${AWS_REGION}
           post-steps:
             - slack/notify:
                 event: fail
@@ -130,8 +130,8 @@ workflows:
           tag: 'staging,staging-${CIRCLE_SHA1}'
           auth:
             - aws-cli/setup:
-                aws_access_key_id: AWS_ACCESS_KEY_ID
-                aws_secret_access_key: AWS_SECRET_ACCESS_KEY
+                role_arn: ${AWS_ROLE_ARN}
+                region: ${AWS_REGION}
           post-steps:
             - slack/notify:
                 event: fail
@@ -182,8 +182,8 @@ workflows:
           tag: 'production,production-${CIRCLE_SHA1}'
           auth:
             - aws-cli/setup:
-                aws_access_key_id: AWS_ACCESS_KEY_ID
-                aws_secret_access_key: AWS_SECRET_ACCESS_KEY
+                role_arn: ${AWS_ROLE_ARN}
+                region: ${AWS_REGION}
           post-steps:
             - slack/notify:
                 event: fail
